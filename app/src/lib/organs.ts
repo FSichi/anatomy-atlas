@@ -57,7 +57,15 @@ export const TISSUE_SWATCH: Record<string, string> = {
 export async function loadOrgans(): Promise<OrganCatalog> {
     const r = await fetch(asset('anatomy/organs/catalog.json'));
     if (!r.ok) throw new Error(`organs/catalog.json: ${r.status}`);
-    return (await r.json()) as OrganCatalog;
+    const catalog = (await r.json()) as OrganCatalog;
+
+    // El pipeline guarda las rutas de los GLB como absolutas ("/anatomy/…").
+    // Bajo el subdirectorio de GitHub Pages eso da 404, así que se reescriben
+    // contra la base real igual que en el catálogo del atlas.
+    for (const organ of catalog.organs) {
+        organ.file = asset(organ.file);
+    }
+    return catalog;
 }
 
 /** Si el pipeline de órganos no corrió, la app sigue funcionando sin la galería. */

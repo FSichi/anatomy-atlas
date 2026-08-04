@@ -42,7 +42,14 @@ export interface MotionCatalog {
 export async function loadMotion(): Promise<MotionCatalog> {
     const r = await fetch(asset('anatomy/motion/catalog.json'));
     if (!r.ok) throw new Error(`motion/catalog.json: ${r.status}`);
-    return (await r.json()) as MotionCatalog;
+    const catalog = (await r.json()) as MotionCatalog;
+
+    // Mismo caso que en el atlas y la galería: las rutas del catálogo son
+    // absolutas y bajo el subdirectorio de Pages dan 404.
+    for (const clip of catalog.clips) {
+        clip.file = asset(clip.file);
+    }
+    return catalog;
 }
 
 export async function motionAvailable(): Promise<boolean> {
