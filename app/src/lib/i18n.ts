@@ -58,6 +58,9 @@ export interface Strings {
     organPartsHint: string;
     autoRotate: string;
     tools: string;
+    lockSelection: string;
+    unlockSelection: string;
+    keyboardHint: string;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
@@ -143,6 +146,9 @@ const es: Strings = {
     organPartsHint: 'Este órgano se compone de {n} estructuras reales y separables. Hacé clic en cualquiera para aislarla.',
     autoRotate: 'Girar',
     tools: 'Herramientas',
+    lockSelection: 'Bloquear la selección',
+    unlockSelection: 'Desbloquear la selección',
+    keyboardHint: 'Flechas para orbitar · Shift + flechas para desplazar · + y − para acercar',
     panels: 'Paneles',
     browserToggleHint: 'El listado navegable de todo lo que hay en la región. Apagalo para dejar la escena más despejada.',
 };
@@ -227,6 +233,9 @@ const en: Strings = {
     organPartsHint: 'This organ is made of {n} real, separable structures. Click any of them to isolate it.',
     autoRotate: 'Spin',
     tools: 'Tools',
+    lockSelection: 'Lock selection',
+    unlockSelection: 'Unlock selection',
+    keyboardHint: 'Arrows to orbit · Shift + arrows to pan · + and − to zoom',
     panels: 'Panels',
     browserToggleHint: 'The browsable list of everything in the region. Turn it off for a clearer scene.',
 };

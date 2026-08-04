@@ -2,6 +2,8 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { type ClipState, makeClipPlane } from '../lib/clipping';
+import { LAYER_KEYS, framing, type LayerChunk, type LayerKey, type View } from '../lib/catalog';
 
 /** Sólo lo que usamos de OrbitControls, para no acoplarnos a three-stdlib. */
 interface Controls {
@@ -25,7 +27,6 @@ function focusOf(obj: THREE.Object3D) {
     const radius = box.getSize(new THREE.Vector3()).length() / 2;
     return { center, radius };
 }
-import { LAYER_KEYS, framing, type LayerChunk, type LayerKey, type View } from '../lib/catalog';
 
 /**
  * Escena anatómica.
@@ -65,7 +66,7 @@ function Layer({
     selected: string | null;
     isolate: Set<string>;
     clipPlanes: THREE.Plane[];
-    onPick: (fma: string, point: THREE.Vector3) => void;
+    onPick: (fma: string, point: THREE.Vector3, ev: PointerEvent) => void;
 }) {
     const { scene } = useGLTF(chunk.file, DRACO);
     // Clonar una vez: useGLTF cachea el original y varias vistas lo comparten.
@@ -124,7 +125,7 @@ function Layer({
                 // e.point es el punto exacto de intersección en coordenadas de
                 // mundo — y como la geometría está en milímetros sin escalar,
                 // sirve directo para medir.
-                onPick(name, e.point.clone());
+                onPick(name, e.point.clone(), e.nativeEvent);
             }}
         />
     );
@@ -209,56 +210,6 @@ function Framer({
     return null;
 }
 
-/* ── Corte anatómico ──────────────────────────────────────────────── */
-
-/**
- * Planos anatómicos, expresados en coordenadas de escena.
- *
- * El grupo está rotado -90° en X, así que el dataset (x, y, z) cae en escena
- * como (x, z, -y). Por eso:
- *   sagital    (izq/der)      → eje X del dataset  → X de escena
- *   coronal    (delante/atrás)→ eje Y del dataset  → -Z de escena
- *   axial      (arriba/abajo) → eje Z del dataset  → Y de escena
- */
-export type ClipAxis = 'sagittal' | 'coronal' | 'axial';
-
-const AXIS_NORMAL: Record<ClipAxis, THREE.Vector3> = {
-    sagittal: new THREE.Vector3(-1, 0, 0),
-    coronal: new THREE.Vector3(0, 0, 1),
-    axial: new THREE.Vector3(0, -1, 0),
-};
-
-/** Índice del eje del dataset que corresponde a cada plano anatómico. */
-export const AXIS_SOURCE: Record<ClipAxis, 0 | 1 | 2> = {
-    sagittal: 0,
-    coronal: 1,
-    axial: 2,
-};
-
-export interface ClipState {
-    enabled: boolean;
-    axis: ClipAxis;
-    /** Posición del corte, en milímetros del dataset. */
-    at: number;
-    flipped: boolean;
-}
-
-/** Traduce el corte a un plano de three.js en coordenadas de mundo. */
-export function makeClipPlane(clip: ClipState): THREE.Plane[] {
-    if (!clip.enabled) return [];
-    const n = AXIS_NORMAL[clip.axis].clone();
-    if (clip.flipped) n.negate();
-
-    // La constante del plano es la distancia al origen a lo largo de la normal.
-    // El punto de corte en escena depende del eje del dataset que representa.
-    const scenePoint = new THREE.Vector3();
-    if (clip.axis === 'sagittal') scenePoint.set(clip.at, 0, 0);
-    if (clip.axis === 'coronal') scenePoint.set(0, 0, -clip.at);
-    if (clip.axis === 'axial') scenePoint.set(0, clip.at, 0);
-
-    return [new THREE.Plane().setFromNormalAndCoplanarPoint(n, scenePoint)];
-}
-
 function ClipEnabler({ on }: { on: boolean }) {
     const { gl } = useThree();
     useEffect(() => {
@@ -310,6 +261,108 @@ function MeasureLine({
             ))}
         </>
     );
+}
+
+/* ── Navegación por teclado ───────────────────────────────────────── */
+
+/**
+ * Órbita, desplazamiento y zoom con el teclado.
+ *
+ * Llegar a un punto concreto arrastrando y con la rueda es impreciso; con
+ * teclas el movimiento es constante y repetible. Se opera sobre la cámara y el
+ * objetivo directamente en vez de sintetizar eventos de mouse.
+ *
+ *   flechas          orbitar
+ *   Shift + flechas  desplazar
+ *   + / −            acercar y alejar
+ */
+function KeyboardNav() {
+    const { camera, size } = useThree();
+    const controls = useThree(s => s.controls) as Controls | null;
+    const held = useRef(new Set<string>());
+
+    useEffect(() => {
+        const interesting = new Set([
+            'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+            '+', '=', '-', '_',
+        ]);
+        const isTyping = (t: EventTarget | null) => {
+            const el = t as HTMLElement | null;
+            return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ||
+                el.isContentEditable);
+        };
+        const down = (e: KeyboardEvent) => {
+            if (isTyping(e.target) || !interesting.has(e.key)) return;
+            e.preventDefault(); // si no, las flechas desplazan la página
+            held.current.add(e.key);
+        };
+        const up = (e: KeyboardEvent) => held.current.delete(e.key);
+        const blur = () => held.current.clear();
+
+        addEventListener('keydown', down);
+        addEventListener('keyup', up);
+        addEventListener('blur', blur);
+        return () => {
+            removeEventListener('keydown', down);
+            removeEventListener('keyup', up);
+            removeEventListener('blur', blur);
+        };
+    }, []);
+
+    const v = useRef(new THREE.Vector3());
+    const right = useRef(new THREE.Vector3());
+    const up = useRef(new THREE.Vector3());
+
+    useFrame((_, dt) => {
+        const keys = held.current;
+        if (!keys.size || !controls) return;
+
+        const shift = keys.has('Shift');
+        const step = dt * 1.8;
+
+        v.current.copy(camera.position).sub(controls.target);
+        const dist = v.current.length();
+
+        const pressed = (a: string, b: string) =>
+            (keys.has(a) ? 1 : 0) - (keys.has(b) ? 1 : 0);
+        const dx = pressed('ArrowRight', 'ArrowLeft');
+        const dy = pressed('ArrowUp', 'ArrowDown');
+        const dz = (keys.has('+') || keys.has('=') ? 1 : 0) -
+            (keys.has('-') || keys.has('_') ? 1 : 0);
+
+        if (dz) {
+            // Zoom exponencial: el paso se siente igual de lejos que de cerca.
+            v.current.multiplyScalar(Math.pow(0.35, dz * step));
+            camera.position.copy(controls.target).add(v.current);
+        }
+
+        if (dx || dy) {
+            camera.updateMatrixWorld();
+            right.current.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+            up.current.setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+
+            if (shift) {
+                // Desplazar: proporcional a la distancia y al alto del viewport,
+                // para que el recorrido en pantalla sea constante.
+                const k = (dist * step * 2) / Math.max(size.height, 1) * 400;
+                const pan = right.current.multiplyScalar(-dx * k)
+                    .add(up.current.multiplyScalar(-dy * k));
+                camera.position.add(pan);
+                controls.target.add(pan);
+            } else {
+                // Orbitar en esféricas, para no acumular deriva.
+                const sph = new THREE.Spherical().setFromVector3(v.current);
+                sph.theta -= dx * step;
+                sph.phi = Math.max(0.05, Math.min(Math.PI - 0.05, sph.phi - dy * step));
+                camera.position.copy(controls.target)
+                    .add(v.current.setFromSpherical(sph));
+            }
+        }
+
+        controls.update();
+    });
+
+    return null;
 }
 
 export interface Stats {
@@ -378,6 +431,8 @@ export interface AnatomyCanvasProps {
     clip: ClipState;
     measuring: boolean;
     measurePoints: THREE.Vector3[];
+    /** Con el candado puesto, ningún clic cambia la selección. */
+    locked: boolean;
     onPick: (fma: string | null) => void;
     onMeasure: (p: THREE.Vector3) => void;
     onStats: (s: Stats) => void;
@@ -423,6 +478,7 @@ export function AnatomyCanvas({
     clip,
     measuring,
     measurePoints,
+    locked,
     onPick,
     onMeasure,
     onStats,
@@ -432,12 +488,39 @@ export function AnatomyCanvas({
 }: AnatomyCanvasProps) {
     const clipPlanes = useMemo(() => makeClipPlane(clip), [clip]);
 
+    /**
+     * Seleccionar al soltar, no al presionar.
+     *
+     * Seleccionábamos en pointerdown, así que cualquier arrastre que empezara
+     * sobre una malla cambiaba la selección antes de mover el mouse. Ahora se
+     * guarda el candidato y sólo se confirma si el puntero casi no se movió:
+     * arrastrar para rotar deja de robar la selección.
+     */
+    const DRAG_PX = 5;
+    const down = useRef<{ x: number; y: number } | null>(null);
+    const pending = useRef<{ fma: string; point: THREE.Vector3 } | null>(null);
+
     return (
         <Canvas
             camera={{ position: [0, 0, 2600], fov: 40, near: 1, far: 12000 }}
             dpr={[1, 2]}
             gl={{ antialias: true, powerPreference: 'high-performance' }}
-            onPointerMissed={() => onPick(null)}
+            onPointerDown={e => {
+                down.current = { x: e.clientX, y: e.clientY };
+                pending.current = null;
+            }}
+            onPointerUp={e => {
+                const d = down.current;
+                down.current = null;
+                const cand = pending.current;
+                pending.current = null;
+                if (!d) return;
+                const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+                if (moved > DRAG_PX) return; // fue un arrastre: no tocar la selección
+                if (!cand) return onPick(null); // clic en vacío: deseleccionar
+                if (measuring) return onMeasure(cand.point);
+                if (!locked) onPick(cand.fma);
+            }}
         >
             <ambientLight intensity={0.72} />
             <hemisphereLight args={['#cfe3f2', '#2a2118', 0.5]} />
@@ -462,8 +545,8 @@ export function AnatomyCanvas({
                             isolate={isolate}
                             clipPlanes={clipPlanes}
                             onPick={(fma, point) => {
-                                if (measuring) onMeasure(point);
-                                else onPick(fma);
+                                // Sólo se anota el candidato; confirma pointerup.
+                                pending.current = { fma, point };
                             }}
                         />
                     ))}
@@ -485,6 +568,7 @@ export function AnatomyCanvas({
                 zoomSpeed={0.9}
             />
             <Framer view={view} nonce={resetNonce} focusTarget={focusTarget} />
+            <KeyboardNav />
         </Canvas>
     );
 }

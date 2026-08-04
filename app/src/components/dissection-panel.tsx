@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PEEL_ORDER, TISSUE_COLOR, type LayerKey, type View } from '../lib/catalog';
-import { AXIS_SOURCE, type ClipAxis, type ClipState } from './anatomy-canvas';
+import { AXIS_SOURCE, type ClipAxis, type ClipState } from '../lib/clipping';
 import type { LayerState } from './anatomy-canvas';
 import type { Strings } from '../lib/i18n';
 

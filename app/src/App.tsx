@@ -22,14 +22,8 @@ import { OrganGallery } from './components/organ-gallery';
 import { DissectionPanel } from './components/dissection-panel';
 import { organsAvailable } from './lib/organs';
 import * as THREE from 'three';
-import {
-    AXIS_SOURCE,
-    AnatomyCanvas,
-    type ClipAxis,
-    type ClipState,
-    type LayerState,
-    type Stats,
-} from './components/anatomy-canvas';
+import { AnatomyCanvas, type LayerState, type Stats } from './components/anatomy-canvas';
+import { AXIS_SOURCE, type ClipAxis, type ClipState } from './lib/clipping';
 import { StructureBrowser } from './components/structure-browser';
 import { readUrl, writeUrl } from './lib/url-state';
 
@@ -107,7 +101,9 @@ export default function App() {
     const [source, setSource] = useState<SourceId>('bodyparts3d');
     const [sources, setSources] = useState<SourceId[]>([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [showBrowser, setShowBrowser] = useState(true);
+    // Apagado por defecto: la lista completa es útil pero tapa media pantalla.
+    const [showBrowser, setShowBrowser] = useState(false);
+    const [locked, setLocked] = useState(false);
     const [mode, setMode] = useState<'atlas' | 'organs'>('atlas');
     const [hasOrgans, setHasOrgans] = useState(false);
 
@@ -392,6 +388,19 @@ export default function App() {
                     <IconBtn label={t.theme} onClick={() => setDark(v => !v)}>
                         ◐
                     </IconBtn>
+                    <button
+                        onClick={() => setLocked(v => !v)}
+                        title={locked ? t.unlockSelection : t.lockSelection}
+                        aria-label={locked ? t.unlockSelection : t.lockSelection}
+                        aria-pressed={locked}
+                        className={`grid size-8 place-items-center rounded-lg border transition-colors ${
+                            locked
+                                ? 'border-clay bg-clay/12 text-clay-ink'
+                                : 'border-rule bg-surface text-ink-soft hover:border-clay hover:text-clay-ink'
+                        }`}
+                    >
+                        {locked ? '🔒' : '🔓'}
+                    </button>
                     <IconBtn label={t.settings} onClick={() => setSettingsOpen(true)}>
                         ⚙
                     </IconBtn>
@@ -424,6 +433,7 @@ export default function App() {
                     clip={{ ...clip, at: clipAt }}
                     measuring={measuring}
                     measurePoints={measurePoints}
+                    locked={locked}
                     onPick={setSelected}
                     onMeasure={addMeasurePoint}
                     onStats={setStats}
@@ -594,6 +604,9 @@ export default function App() {
                     no chocar con la columna derecha. */}
                 <div className="pointer-events-none absolute right-[344px] bottom-6 left-[300px] flex flex-col items-center gap-1">
                     <p className="text-ink-faint text-center font-sans text-[11px]">{t.hint}</p>
+                    <p className="text-ink-faint/70 text-center font-sans text-[10.5px]">
+                        {t.keyboardHint}
+                    </p>
                     <button
                         onClick={() => setResetNonce(n => n + 1)}
                         className="text-ink-faint hover:text-clay-ink pointer-events-auto font-sans text-[11px] underline underline-offset-2 transition-colors"
