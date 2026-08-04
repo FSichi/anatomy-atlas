@@ -697,6 +697,7 @@ export default function App() {
                 <SettingsModal
                     open={settingsOpen}
                     t={t}
+                    lang={lang}
                     source={source}
                     available={sources}
                     meta={SOURCE_META}

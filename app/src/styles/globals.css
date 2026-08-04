@@ -36,7 +36,9 @@
     --sunk: #f2f0e9;
     --ink: #141413;
     --ink-soft: #55534c;
-    --ink-faint: #8a887e;
+    /* Calibrado para AA (4,5:1) sobre --surface: el valor anterior daba 3,6:1
+       y las etiquetas de 10px quedaban por debajo del mínimo legible. */
+    --ink-faint: #6f6d64;
     --rule: #dedbd0;
     --clay: #d97757;
     --clay-ink: #b4573a;
@@ -44,6 +46,11 @@
     --stage-to: #e0dcce;
     --glass: rgb(255 255 255 / 0.8);
     --shadow: 0 1px 2px rgb(20 20 19 / 0.05), 0 10px 30px -14px rgb(20 20 19 / 0.2);
+    /* Verde oliva de la paleta de Anthropic: semántico, pero de la misma
+       familia cálida que el resto. Un esmeralda saturado se pelea con el ocre. */
+    --good: #5d7043;
+    --good-bg: rgb(120 140 93 / 0.14);
+    --good-line: rgb(120 140 93 / 0.4);
     color-scheme: light;
 }
 
@@ -53,7 +60,8 @@
     --sunk: #100f0e;
     --ink: #faf9f5;
     --ink-soft: #b0aea5;
-    --ink-faint: #7c7a72;
+    /* Idem en oscuro: 3,97:1 antes, 4,8:1 ahora. */
+    --ink-faint: #8a887f;
     --rule: #2d2c28;
     --clay: #e08a69;
     --clay-ink: #f0a888;
@@ -61,6 +69,9 @@
     --stage-to: #0c0c0b;
     --glass: rgb(28 28 26 / 0.76);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 14px 36px -16px rgb(0 0 0 / 0.72);
+    --good: #9cb078;
+    --good-bg: rgb(156 176 120 / 0.13);
+    --good-line: rgb(156 176 120 / 0.33);
     color-scheme: dark;
 }
 
@@ -113,12 +124,33 @@
         color: var(--ink-faint);
     }
 
+    /* Panel flotante: translúcido a propósito — está encima de la escena y la
+       escena sigue importando. */
     .panel {
         background: var(--glass);
         backdrop-filter: blur(16px) saturate(1.4);
         border: 1px solid var(--rule);
         border-radius: 14px;
         box-shadow: var(--shadow);
+    }
+
+    /* Modal: lo contrario. Te detiene para que leas, así que va opaco. El mismo
+       vidrio que funciona flotando vuelve ilegible un bloque de texto largo
+       cuando abajo hay un modelo con mucho detalle. */
+    .sheet {
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 16px;
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.08),
+            0 24px 60px -18px rgb(0 0 0 / 0.45);
+    }
+
+    /* El velo desenfoca el FONDO, que es distinto a desenfocar a través del
+       panel: aleja la escena en vez de ensuciar el texto. */
+    .scrim {
+        background: rgb(0 0 0 / 0.5);
+        backdrop-filter: blur(3px);
     }
 }
 

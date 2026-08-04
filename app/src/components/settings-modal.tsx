@@ -18,6 +18,7 @@ export interface SourceMeta {
 export function SettingsModal({
     open,
     t,
+    lang,
     source,
     available,
     meta,
@@ -26,6 +27,7 @@ export function SettingsModal({
 }: {
     open: boolean;
     t: Strings;
+    lang: string;
     source: SourceId;
     available: SourceId[];
     meta: Record<string, SourceMeta | undefined>;
@@ -34,23 +36,26 @@ export function SettingsModal({
 }) {
     if (!open) return null;
 
+    // En español el decimal va con coma: "18,4 MB", no "18.4 MB".
+    const mb = (n: number) => n.toLocaleString(lang, { minimumFractionDigits: 1 });
+
     return (
         <div
-            className="absolute inset-0 z-50 grid place-items-center bg-black/35 px-6"
+            className="scrim absolute inset-0 z-50 grid place-items-center px-6"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
             aria-label={t.settings}
         >
             <div
-                className="panel w-[620px] max-w-full overflow-hidden"
+                className="sheet w-[620px] max-w-full overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="border-rule flex items-baseline gap-3 border-b px-5 py-3.5">
                     <h2 className="flex-1 font-sans text-[15px] font-semibold">{t.settings}</h2>
                     <button
                         onClick={onClose}
-                        className="text-ink-faint hover:text-ink font-sans text-[12px]"
+                        className="text-ink-soft hover:text-ink font-sans text-[12px]"
                     >
                         {t.close}
                     </button>
@@ -58,7 +63,7 @@ export function SettingsModal({
 
                 <div className="px-5 py-4">
                     <h3 className="eyebrow">{t.dataSource}</h3>
-                    <p className="text-ink-faint mt-1.5 text-[12.5px] leading-relaxed">
+                    <p className="text-ink-soft mt-1.5 text-[12.5px] leading-relaxed">
                         {t.dataSourceHint}
                     </p>
 
@@ -87,8 +92,8 @@ export function SettingsModal({
                                         </span>
                                         {m && (
                                             <span className="text-ink-faint font-mono text-[10.5px] tabular-nums">
-                                                {m.structures.toLocaleString()} ·{' '}
-                                                {m.megabytes.toFixed(1)} MB
+                                                {m.structures.toLocaleString(lang)} ·{' '}
+                                                {mb(m.megabytes)} MB
                                             </span>
                                         )}
                                         {!enabled && (
@@ -103,11 +108,16 @@ export function SettingsModal({
                                     </p>
 
                                     {m && (
-                                        <div className="mt-2 flex flex-wrap gap-1">
+                                        <div className="mt-2.5 flex flex-wrap gap-1">
                                             {m.strong.map(s => (
                                                 <span
                                                     key={s}
-                                                    className="rounded-[4px] border border-emerald-600/30 bg-emerald-600/10 px-1.5 py-0.5 font-mono text-[9.5px] text-emerald-700 dark:text-emerald-400"
+                                                    className="rounded-[4px] border px-1.5 py-0.5 font-mono text-[10px]"
+                                                    style={{
+                                                        color: 'var(--good)',
+                                                        background: 'var(--good-bg)',
+                                                        borderColor: 'var(--good-line)',
+                                                    }}
                                                 >
                                                     + {s}
                                                 </span>
@@ -115,7 +125,7 @@ export function SettingsModal({
                                             {m.weak.map(s => (
                                                 <span
                                                     key={s}
-                                                    className="border-rule bg-sunk text-ink-faint rounded-[4px] border px-1.5 py-0.5 font-mono text-[9.5px]"
+                                                    className="border-rule bg-sunk text-ink-faint rounded-[4px] border px-1.5 py-0.5 font-mono text-[10px]"
                                                 >
                                                     − {s}
                                                 </span>
