@@ -180,9 +180,12 @@ export function OrganGallery({
     const part = organ.structures.find(s => s.fma === selected);
 
     return (
-        <div className="grid h-full grid-cols-[240px_1fr_300px] gap-5 p-5">
+        // En pantallas chicas las tres columnas no entran: pasa a una sola,
+        // con el modelo arriba (que es lo que se viene a ver) y las listas
+        // debajo, desplazando la página entera.
+        <div className="grid h-full auto-rows-min grid-cols-1 gap-3 overflow-y-auto p-3 lg:auto-rows-auto lg:grid-cols-[240px_1fr_300px] lg:gap-5 lg:overflow-hidden lg:p-5">
             {/* Biblioteca */}
-            <aside className="panel flex min-h-0 flex-col overflow-hidden">
+            <aside className="panel order-2 flex max-h-[46svh] min-h-0 flex-col overflow-hidden lg:order-none lg:max-h-none">
                 <h2 className="eyebrow border-rule border-b px-4 py-3">{t.organLibrary}</h2>
 
                 <div className="border-rule flex gap-1 border-b px-3 py-2">
@@ -248,7 +251,7 @@ export function OrganGallery({
 
             {/* Escenario */}
             <div
-                className="panel relative overflow-hidden"
+                className="panel relative order-1 h-[44svh] overflow-hidden lg:order-none lg:h-auto"
                 style={{
                     background:
                         'radial-gradient(120% 90% at 50% 4%, var(--stage-from), var(--stage-to))',
@@ -321,7 +324,7 @@ export function OrganGallery({
             </div>
 
             {/* Ficha */}
-            <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+            <aside className="order-3 flex min-h-0 flex-col gap-4 lg:order-none lg:overflow-y-auto">
                 <section className="panel p-5">
                     <p className="eyebrow">{organ.system}</p>
                     <h1 className="mt-1.5 text-[26px] leading-[1.1] tracking-tight text-balance">

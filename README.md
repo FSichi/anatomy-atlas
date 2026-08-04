@@ -158,6 +158,23 @@ BP3D_RAW=/ruta/a/bp3d-raw python pipeline/build_fullbody.py
   idénticos a 0,9 MP y 8,3 MP porque sólo mide submisión de comandos en CPU.
   Hay que usar `EXT_disjoint_timer_query_webgl2`.
 
+## Autor
+
+**Facundo Sichi** — [@FSichi](https://github.com/FSichi)
+
+Diseñé y construí este proyecto de punta a punta: el pipeline de datos que
+convierte anatomía escaneada en assets web, el visor 3D, el sistema de diseño
+y el despliegue.
+
+Lo que me interesaba resolver no era mostrar un modelo 3D, sino algo más
+difícil: que **cada estructura sea un objeto real y consultable**, no una malla
+indivisible. De ahí sale todo lo demás — que puedas aislar el oblicuo externo
+derecho, leer su nombre en latín, medir su longitud en milímetros del cuerpo
+que se escaneó, y compartir esa vista exacta en un link.
+
+Si te sirve para enseñar, estudiar o construir algo encima, adelante. Y si algo
+está mal —que en anatomía es probable— abrí un issue.
+
 ## Licencia de los datos
 
 Geometría: **BodyParts3D**, © The Database Center for Life Science, bajo

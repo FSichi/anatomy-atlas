@@ -183,8 +183,10 @@ export function MotionViewer({
     const pct = duration ? Math.min(100, (time % duration) / duration * 100) : 0;
 
     return (
-        <div className="grid h-full grid-cols-[240px_1fr] gap-5 p-5">
-            <aside className="panel flex min-h-0 flex-col overflow-hidden">
+        // Igual que la galería: en chico va el modelo arriba y la lista de
+        // clips debajo, en una sola columna.
+        <div className="grid h-full auto-rows-min grid-cols-1 gap-3 overflow-y-auto p-3 lg:auto-rows-auto lg:grid-cols-[240px_1fr] lg:gap-5 lg:overflow-hidden lg:p-5">
+            <aside className="panel order-2 flex max-h-[42svh] min-h-0 flex-col overflow-hidden lg:order-none lg:max-h-none">
                 <h2 className="eyebrow border-rule border-b px-4 py-3">{t.motionClips}</h2>
                 <div className="min-h-0 flex-1 overflow-y-auto py-1">
                     {catalog.clips.map(c => (
@@ -219,7 +221,7 @@ export function MotionViewer({
             </aside>
 
             <div
-                className="panel relative overflow-hidden"
+                className="panel relative order-1 h-[52svh] overflow-hidden lg:order-none lg:h-auto"
                 style={{
                     background:
                         'radial-gradient(120% 90% at 50% 4%, var(--stage-from), var(--stage-to))',
@@ -277,7 +279,7 @@ export function MotionViewer({
                 </Canvas>
 
                 {/* Transporte */}
-                <div className="panel absolute right-6 bottom-6 left-6 flex items-center gap-4 px-4 py-3">
+                <div className="panel absolute right-2 bottom-2 left-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 lg:right-6 lg:bottom-6 lg:left-6 lg:flex-nowrap lg:gap-4 lg:px-4 lg:py-3">
                     <button
                         onClick={() => setPlaying(p => !p)}
                         aria-label={playing ? t.pause : t.play}
