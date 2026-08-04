@@ -1,0 +1,161 @@
+/**
+ * Cadenas de interfaz. Diccionario tipado propio en vez de una librería: sólo
+ * hay dos idiomas de UI y `es` tipado como `Strings` ya hace que falte una
+ * clave rompa la compilación.
+ *
+ * Los nombres anatómicos NO viven acá — vienen de terms.json, que trae la
+ * nomenclatura oficial en siete idiomas.
+ */
+
+export interface Strings {
+    brand: string;
+    regions: Record<string, string>;
+    layers: Record<string, string>;
+    dissection: string;
+    peel: string;
+    peelHint: string;
+    structure: string;
+    emptySelection: string;
+    search: string;
+    searchPlaceholder: string;
+    noResults: string;
+    theme: string;
+    language: string;
+    reset: string;
+    hint: string;
+    loading: string;
+    error: string;
+    structures: string;
+    triangles: string;
+    transferred: string;
+    isolate: string;
+    showAll: string;
+    browser: string;
+    filterPlaceholder: string;
+    allLayers: string;
+    focus: string;
+    andMore: string;
+    section: string;
+    planes: Record<ClipAxisKey, string>;
+    flipSide: string;
+    measure: string;
+    measureOff: string;
+    measureHint: string;
+    measureResult: string;
+}
+
+type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
+
+const es: Strings = {
+    brand: 'Atlas',
+    regions: {
+        label: 'Región',
+        overview: 'Cuerpo entero',
+        head: 'Cabeza',
+        neck: 'Cuello',
+        thorax: 'Tórax',
+        abdomen: 'Abdomen',
+        back: 'Espalda',
+        upperlimb: 'Miembro superior',
+        lowerlimb: 'Miembro inferior',
+    },
+    layers: {
+        skeletal: 'Huesos',
+        organs: 'Órganos',
+        vascular: 'Vasos',
+        nervous: 'Nervios',
+        muscular: 'Músculos',
+        skin: 'Piel',
+    },
+    dissection: 'Disección',
+    peel: 'Pelar hasta esta capa',
+    peelHint: 'Clic en el nombre de una capa para pelar hasta ahí.',
+    structure: 'Estructura',
+    emptySelection: 'Hacé clic en cualquier estructura para identificarla.',
+    search: 'Buscar estructura',
+    searchPlaceholder: 'Nombre en español, inglés o latín…',
+    noResults: 'Sin resultados',
+    theme: 'Cambiar tema',
+    language: 'Idioma',
+    reset: 'Reencuadrar',
+    hint: 'Arrastrá para rotar · rueda para zoom · clic para identificar',
+    loading: 'Descomprimiendo geometría',
+    error: 'No se pudo cargar la anatomía',
+    structures: 'estructuras',
+    triangles: 'triángulos',
+    transferred: 'transferidos',
+    isolate: 'Aislar',
+    showAll: 'Ver todo',
+    browser: 'Estructuras del modelo',
+    filterPlaceholder: 'Filtrar…',
+    allLayers: 'Todas',
+    focus: 'Enfocar',
+    andMore: '+{n} más — refiná el filtro para verlas',
+    section: 'Corte anatómico',
+    planes: { sagittal: 'Sagital', coronal: 'Coronal', axial: 'Axial' },
+    flipSide: 'Invertir el lado que se conserva',
+    measure: 'Medición',
+    measureOff: 'Activá la medición y marcá dos puntos sobre el modelo.',
+    measureHint: 'Marcá dos puntos. El tercer clic reinicia.',
+    measureResult: '{mm} mm · {cm} cm',
+};
+
+const en: Strings = {
+    brand: 'Atlas',
+    regions: {
+        label: 'Region',
+        overview: 'Whole body',
+        head: 'Head',
+        neck: 'Neck',
+        thorax: 'Thorax',
+        abdomen: 'Abdomen',
+        back: 'Back',
+        upperlimb: 'Upper limb',
+        lowerlimb: 'Lower limb',
+    },
+    layers: {
+        skeletal: 'Bones',
+        organs: 'Organs',
+        vascular: 'Vessels',
+        nervous: 'Nerves',
+        muscular: 'Muscles',
+        skin: 'Skin',
+    },
+    dissection: 'Dissection',
+    peel: 'Peel to this layer',
+    peelHint: 'Click a layer name to peel down to it.',
+    structure: 'Structure',
+    emptySelection: 'Click any structure to identify it.',
+    search: 'Search structure',
+    searchPlaceholder: 'Name in English, Spanish or Latin…',
+    noResults: 'No results',
+    theme: 'Toggle theme',
+    language: 'Language',
+    reset: 'Reframe',
+    hint: 'Drag to rotate · scroll to zoom · click to identify',
+    loading: 'Decompressing geometry',
+    error: 'Anatomy could not be loaded',
+    structures: 'structures',
+    triangles: 'triangles',
+    transferred: 'transferred',
+    isolate: 'Isolate',
+    showAll: 'Show all',
+    browser: 'Model structures',
+    filterPlaceholder: 'Filter…',
+    allLayers: 'All',
+    focus: 'Focus',
+    andMore: '+{n} more — narrow the filter to see them',
+    section: 'Cross-section',
+    planes: { sagittal: 'Sagittal', coronal: 'Coronal', axial: 'Axial' },
+    flipSide: 'Flip which side is kept',
+    measure: 'Measurement',
+    measureOff: 'Turn measurement on and mark two points on the model.',
+    measureHint: 'Mark two points. A third click starts over.',
+    measureResult: '{mm} mm · {cm} cm',
+};
+
+export const UI = { es, en };
+
+export type Lang = keyof typeof UI;
+
+export const LANGS: Lang[] = ['es', 'en'];

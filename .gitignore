@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+# Datos crudos del pipeline: 1,25 GB de STL descargados de BodyParts3D.
+# Se regeneran con pipeline/download_all.py — no van al repo.
+pipeline/raw/
+pipeline/out/*.json
+!pipeline/out/.gitkeep
+
+# Los GLB generados SÍ van al repo (21,9 MB): sin ellos la app no arranca y
+# regenerarlos exige bajar 1,25 GB y correr el pipeline entero.
+
+.DS_Store
+Thumbs.db
+*.log
+.env.local

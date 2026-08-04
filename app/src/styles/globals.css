@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+
+/* Tipografías autohospedadas: sin CDN, sin fallback silencioso. */
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource-variable/lora';
+
+/* ──────────────────────────────────────────────────────────────────
+   Tokens.
+
+   La paleta es la de Anthropic. Los neutros están sesgados hacia el
+   terracota — un gris puro se lee como no elegido.
+
+   Los colores de TEJIDO no viven acá a propósito: son datos, no tema.
+   Un músculo tiene que verse igual en claro y en oscuro; si cambia con
+   el tema deja de ser información y pasa a ser decoración.
+   ────────────────────────────────────────────────────────────────── */
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Lora Variable', ui-serif, Georgia, serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+    /* Tejidos — constantes en ambos temas */
+    --color-tissue-skeletal: #ddd6c0;
+    --color-tissue-organs: #b8736a;
+    --color-tissue-vascular: #b0262e;
+    --color-tissue-nervous: #e3c65f;
+    --color-tissue-muscular: #b23f3a;
+    --color-tissue-skin: #e0b394;
+}
+
+:root {
+    --paper: #faf9f5;
+    --surface: #ffffff;
+    --sunk: #f2f0e9;
+    --ink: #141413;
+    --ink-soft: #55534c;
+    --ink-faint: #8a887e;
+    --rule: #dedbd0;
+    --clay: #d97757;
+    --clay-ink: #b4573a;
+    --stage-from: #efece3;
+    --stage-to: #e0dcce;
+    --glass: rgb(255 255 255 / 0.8);
+    --shadow: 0 1px 2px rgb(20 20 19 / 0.05), 0 10px 30px -14px rgb(20 20 19 / 0.2);
+    color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+    --paper: #141413;
+    --surface: #1c1c1a;
+    --sunk: #100f0e;
+    --ink: #faf9f5;
+    --ink-soft: #b0aea5;
+    --ink-faint: #7c7a72;
+    --rule: #2d2c28;
+    --clay: #e08a69;
+    --clay-ink: #f0a888;
+    --stage-from: #1b1b19;
+    --stage-to: #0c0c0b;
+    --glass: rgb(28 28 26 / 0.76);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 14px 36px -16px rgb(0 0 0 / 0.72);
+    color-scheme: dark;
+}
+
+@theme inline {
+    --color-paper: var(--paper);
+    --color-surface: var(--surface);
+    --color-sunk: var(--sunk);
+    --color-ink: var(--ink);
+    --color-ink-soft: var(--ink-soft);
+    --color-ink-faint: var(--ink-faint);
+    --color-rule: var(--rule);
+    --color-clay: var(--clay);
+    --color-clay-ink: var(--clay-ink);
+}
+
+@layer base {
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-serif);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--clay);
+        outline-offset: 2px;
+    }
+}
+
+@layer components {
+    /* Etiqueta de sección: sans, versalitas espaciadas. */
+    .eyebrow {
+        font-family: var(--font-sans);
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+    }
+
+    .panel {
+        background: var(--glass);
+        backdrop-filter: blur(16px) saturate(1.4);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+    }
+}
+
+/* La retícula del escenario: es un instrumento, no un lienzo vacío. */
+.stage-grid {
+    background-image:
+        linear-gradient(to right, currentColor 1px, transparent 1px),
+        linear-gradient(to bottom, currentColor 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.035;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
