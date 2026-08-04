@@ -1,3 +1,4 @@
+import { asset } from './asset-url';
 /**
  * Galería de órganos: cada órgano es un GLB propio, a máxima resolución.
  *
@@ -54,7 +55,7 @@ export const TISSUE_SWATCH: Record<string, string> = {
 };
 
 export async function loadOrgans(): Promise<OrganCatalog> {
-    const r = await fetch('/anatomy/organs/catalog.json');
+    const r = await fetch(asset('anatomy/organs/catalog.json'));
     if (!r.ok) throw new Error(`organs/catalog.json: ${r.status}`);
     return (await r.json()) as OrganCatalog;
 }
@@ -62,7 +63,7 @@ export async function loadOrgans(): Promise<OrganCatalog> {
 /** Si el pipeline de órganos no corrió, la app sigue funcionando sin la galería. */
 export async function organsAvailable(): Promise<boolean> {
     try {
-        const r = await fetch('/anatomy/organs/catalog.json');
+        const r = await fetch(asset('anatomy/organs/catalog.json'));
         if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return false;
         const body = (await r.json()) as Partial<OrganCatalog>;
         return Array.isArray(body.organs) && body.organs.length > 0;

@@ -11,6 +11,8 @@ export interface Strings {
     brand: string;
     regions: Record<string, string>;
     layers: Record<string, string>;
+    madeWith: string;
+    by: string;
     dissection: string;
     peel: string;
     peelHint: string;
@@ -104,6 +106,8 @@ const es: Strings = {
         muscular: 'Músculos',
         skin: 'Piel',
     },
+    madeWith: 'Hecho con',
+    by: 'por',
     dissection: 'Disección',
     peel: 'Pelar hasta esta capa',
     peelHint: 'Clic en el nombre de una capa para pelar hasta ahí.',
@@ -205,6 +209,8 @@ const en: Strings = {
         muscular: 'Muscles',
         skin: 'Skin',
     },
+    madeWith: 'Made with',
+    by: 'by',
     dissection: 'Dissection',
     peel: 'Peel to this layer',
     peelHint: 'Click a layer name to peel down to it.',

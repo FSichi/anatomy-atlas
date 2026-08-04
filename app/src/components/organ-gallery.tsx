@@ -12,6 +12,7 @@ import {
 } from '../lib/organs';
 import type { Strings } from '../lib/i18n';
 import type { QualityProfile } from '../lib/quality';
+import { DRACO_PATH } from '../lib/asset-url';
 
 /**
  * Galería de órganos: un órgano por vez, a máxima resolución.
@@ -21,7 +22,7 @@ import type { QualityProfile } from '../lib/quality';
  * elaboradas ni post-proceso, el volumen ya está en la geometría.
  */
 
-const DRACO = '/draco/';
+const DRACO = DRACO_PATH;
 
 const HIGHLIGHT = new THREE.MeshStandardMaterial({
     color: '#3ad0bb',

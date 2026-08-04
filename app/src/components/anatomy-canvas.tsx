@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { type ClipState, makeClipPlane } from '../lib/clipping';
 import type { QualityProfile } from '../lib/quality';
 import { LAYER_KEYS, framing, type LayerChunk, type LayerKey, type View } from '../lib/catalog';
+import { DRACO_PATH } from '../lib/asset-url';
 
 /** Sólo lo que usamos de OrbitControls, para no acoplarnos a three-stdlib. */
 interface Controls {
@@ -39,7 +40,7 @@ function focusOf(obj: THREE.Object3D) {
  * - El decodificador Draco está autohospedado en /draco.
  */
 
-const DRACO = '/draco/';
+const DRACO = DRACO_PATH;
 
 export interface LayerState {
     visible: boolean;

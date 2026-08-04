@@ -4,6 +4,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Strings } from '../lib/i18n';
 import type { QualityProfile } from '../lib/quality';
+import { DRACO_PATH, asset } from '../lib/asset-url';
 
 /**
  * Visor de movimiento.
@@ -14,7 +15,7 @@ import type { QualityProfile } from '../lib/quality';
  * acá se reproducen TODAS a la vez sobre el mismo mixer — comparten duración.
  */
 
-const DRACO = '/draco/';
+const DRACO = DRACO_PATH;
 
 /**
  * El GLB de movimiento quedó en metros: las curvas de animación horneadas
@@ -39,14 +40,14 @@ export interface MotionCatalog {
 }
 
 export async function loadMotion(): Promise<MotionCatalog> {
-    const r = await fetch('/anatomy/motion/catalog.json');
+    const r = await fetch(asset('anatomy/motion/catalog.json'));
     if (!r.ok) throw new Error(`motion/catalog.json: ${r.status}`);
     return (await r.json()) as MotionCatalog;
 }
 
 export async function motionAvailable(): Promise<boolean> {
     try {
-        const r = await fetch('/anatomy/motion/catalog.json');
+        const r = await fetch(asset('anatomy/motion/catalog.json'));
         if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return false;
         const b = (await r.json()) as Partial<MotionCatalog>;
         return Array.isArray(b.clips) && b.clips.length > 0;

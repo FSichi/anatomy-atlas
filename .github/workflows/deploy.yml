@@ -1,0 +1,66 @@
+name: Deploy a GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permisos mínimos para publicar en Pages con el despliegue nativo.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un despliegue a la vez; no se cancela el que está corriendo.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+
+      - name: Instalar dependencias
+        working-directory: app
+        run: pnpm install --frozen-lockfile
+
+      - name: Verificar tipos
+        working-directory: app
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Compilar
+        working-directory: app
+        # GITHUB_PAGES cambia la base a /anatomy-atlas/: el sitio no vive en la
+        # raíz del dominio y sin esto todos los assets dan 404.
+        env:
+          GITHUB_PAGES: '1'
+        run: pnpm build
+
+      - name: Evitar que Jekyll procese la salida
+        run: touch app/dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

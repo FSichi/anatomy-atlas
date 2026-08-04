@@ -4,6 +4,8 @@
  * es la única fuente de URLs.
  */
 
+import { asset } from './asset-url';
+
 /**
  * Capas. `joints`, `insertions` y `lymphoid` sólo existen en Z-Anatomy y en la
  * fuente combinada; la app las ignora sin ruido cuando el catálogo no las trae.
@@ -226,11 +228,26 @@ async function json<T>(url: string): Promise<T> {
 }
 
 export async function loadCatalog(source: SourceId): Promise<[AnatomyCatalog, TermIndex]> {
-    const base = `/anatomy/${SOURCE_INFO[source].dir}`;
-    return Promise.all([
+    const base = asset(`anatomy/${SOURCE_INFO[source].dir}`);
+    const [catalog, terms] = await Promise.all([
         json<AnatomyCatalog>(`${base}/catalog.json`),
         json<TermIndex>(`${base}/terms.json`),
     ]);
+
+    // El pipeline guarda las URLs de los GLB como rutas absolutas ("/anatomy/…").
+    // Sirven en la raíz del dominio, pero no bajo el subdirectorio de GitHub
+    // Pages, así que se reescriben contra la base real del despliegue.
+    for (const chunks of [
+        ...catalog.regions.map(r => r.layers),
+        catalog.overview.layers,
+    ]) {
+        for (const key of LAYER_KEYS) {
+            const c = chunks[key];
+            if (c) c.file = asset(c.file);
+        }
+    }
+
+    return [catalog, terms];
 }
 
 /**
@@ -245,7 +262,7 @@ export async function availableSources(): Promise<SourceId[]> {
     const checks = await Promise.all(
         SOURCES.map(async id => {
             try {
-                const r = await fetch(`/anatomy/${SOURCE_INFO[id].dir}/catalog.json`);
+                const r = await fetch(asset(`anatomy/${SOURCE_INFO[id].dir}/catalog.json`));
                 if (!r.ok) return null;
                 if (!(r.headers.get('content-type') ?? '').includes('json')) return null;
                 const body = (await r.json()) as Partial<AnatomyCatalog>;

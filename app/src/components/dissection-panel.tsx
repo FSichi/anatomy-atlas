@@ -46,7 +46,9 @@ export function DissectionPanel({
     const toolsActive = clip.enabled || measuring;
 
     return (
-        <section className="panel absolute top-7 left-7 w-[276px] overflow-hidden">
+        // Sin posicionamiento propio: lo ubica el contenedor, que es quien sabe
+        // si estamos en escritorio (panel flotante) o en móvil (hoja inferior).
+        <section className="panel w-full overflow-hidden">
             <header className="border-rule flex items-baseline gap-2 border-b px-5 py-3.5">
                 <h2 className="eyebrow flex-1">{t.dissection}</h2>
                 <span className="text-ink-faint font-mono text-[10px] tabular-nums">

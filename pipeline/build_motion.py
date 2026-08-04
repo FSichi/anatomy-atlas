@@ -26,12 +26,30 @@ Desde Blender 4.4 las acciones tienen SLOTS. Asignar `animation_data.action` ya
 no alcanza: sin enlazar `action_slot` la acción queda puesta pero ningún canal
 se aplica. El horneado capturaba la pose de reposo y el resultado era basura.
 
+POR QUÉ NO SE USA nla.bake
+--------------------------
+La primera versión horneaba con `bpy.ops.nla.bake(bake_types={"OBJECT"})` y el
+resultado se veía mal por cuatro motivos, medidos sobre los GLB:
+
+  - 0 de 271 mallas trasladaban. Cada hueso giraba sobre su propio origen en
+    vez de seguir la cadena cinemática, así que se despegaban de la articulación.
+  - saltos de 180° entre cuadros consecutivos: volteo de signo del cuaternión.
+  - 128 mallas con la escala animada. Los huesos se inflaban.
+  - canales mezclados de 2 y 49 claves: parte del rango no se muestreaba.
+
+Como cada malla cuelga rígidamente de un hueso (`parent_type == 'BONE'`), su
+`matrix_world` en cada cuadro ES la transformación rígida de ese hueso, ya
+resuelta por la cinemática directa del rig. Así que se lee cuadro a cuadro y se
+vuelca a curvas de objeto a mano: traslación correcta, sin escala, y con el
+signo del cuaternión encadenado. Nada que estimar y nada que se pierda.
+
 Uso:  python build_motion.py [--plan]
 """
 
 import glob
 import hashlib
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -40,6 +58,7 @@ import tempfile
 import time
 
 import bpy
+import mathutils
 
 # Sin esto Blender headless bloquea los scripts embebidos del archivo.
 bpy.context.preferences.filepaths.use_scripts_auto_execute = True
@@ -55,6 +74,9 @@ BLEND = os.environ["BIOMECH_BLEND"]
 
 # Cuadros por tramo entre pose y pose. 24 da un gesto de 1 s a 24 fps.
 SPAN = 24
+
+# Umbral de la compuerta de calidad: giro máximo tolerado en un solo cuadro.
+MAX_STEP_DEG = 30.0
 
 # Cada secuencia es una lista de poses; se interpola de una a la siguiente y se
 # vuelve al principio para que el bucle cierre.
@@ -122,6 +144,11 @@ def read_pose(arm, action):
     bind(arm, action)
     bpy.context.scene.frame_set(0)      # las poses viven en el cuadro 0
     bpy.context.view_layer.update()
+    # Se guardan los canales tal como están, en el modo de rotación propio de
+    # cada hueso. Probé pasar todo a cuaterniones vía matrix_basis pensando que
+    # los volteos venían de interpolar euler cruzando ±180°: empeoró bastante
+    # (foetal saltó de 12,6° a 164,9° entre cuadros). El rig depende de su modo
+    # original, así que se respeta.
     return {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(),
                       pb.rotation_euler.copy(), pb.scale.copy())
             for pb in arm.pose.bones}
@@ -205,23 +232,97 @@ def main():
             print("  !! la pose no mueve nada — se saltea", flush=True)
             continue
 
-        # Hornear a transformaciones de objeto y soltar la armadura.
-        for o in bpy.data.objects:
-            o.select_set(False)
+        # 3. Muestrear la transformada de mundo de cada malla, cuadro a cuadro.
+        #
+        #    Acá está la clave: cada malla cuelga rígidamente de un hueso, así
+        #    que su matrix_world YA ES la transformación rígida de ese hueso, y
+        #    la evalúa la cinemática directa del rig. No hay nada que estimar
+        #    — sólo hay que leerla y volcarla sin romperla, que es exactamente
+        #    lo que nla.bake no hacía: devolvía rotación sin traslación.
+        frames = list(range(f0, f1 + 1))
+        world = {o.name: [] for o in meshes}
+        for f in frames:
+            scn.frame_set(f)
+            bpy.context.view_layer.update()
+            dg = bpy.context.evaluated_depsgraph_get()
+            for o in meshes:
+                world[o.name].append(o.evaluated_get(dg).matrix_world.copy())
+        print(f"  muestreados {len(frames)} cuadros x {len(meshes)} mallas",
+              flush=True)
+
+        # 4. Hornear la pose de reposo EN LOS VÉRTICES y dejar el objeto en la
+        #    identidad.
+        #
+        #    Z-Anatomy espeja las piezas izquierda/derecha, así que sus matrices
+        #    tienen determinante negativo. Descomponer una matriz espejada da
+        #    escala negativa y un cuaternión ambiguo: de ahí los volteos de 170°.
+        #    Metiendo el reposo en la malla y animando RELATIVO a él, el espejo
+        #    aparece en ambos factores y se cancela — la transformada relativa
+        #    es una rotación limpia, con determinante +1 y escala 1.
+        scn.frame_set(f0)
+        bpy.context.view_layer.update()
+        rest = {}
         for o in meshes:
-            o.select_set(True)
-        bpy.context.view_layer.objects.active = meshes[0]
-        print(f"  horneando {len(meshes)} mallas…", flush=True)
-        bpy.ops.nla.bake(
-            frame_start=f0, frame_end=f1, step=1,
-            only_selected=True, visual_keying=True,
-            clear_constraints=True, clear_parents=True,
-            bake_types={"OBJECT"},
-        )
+            rest[o.name] = world[o.name][0].copy()
+            if o.data.users > 1:
+                o.data = o.data.copy()      # no pisar mallas compartidas
+            o.data.transform(rest[o.name])
+            o.constraints.clear()
+            o.parent = None
+            o.matrix_world = mathutils.Matrix.Identity(4)
+            o.animation_data_clear()
 
         for o in list(bpy.data.objects):
             if o not in meshes:
                 bpy.data.objects.remove(o, do_unlink=True)
+
+        # 5. Escribir las curvas: sólo posición y rotación.
+        #
+        #    La escala NUNCA se keyframea. Un hueso no cambia de tamaño, y el
+        #    horneado anterior le animaba la escala a 128 mallas.
+        #
+        #    Y se fuerza continuidad de signo en el cuaternión: q y -q son la
+        #    misma orientación, pero si el signo salta entre cuadros el slerp
+        #    toma el camino largo y el hueso pega una vuelta entera. Ese era el
+        #    salto de 180° entre cuadros consecutivos que medimos.
+        flips = 0
+        worst_scale = 0.0
+        worst_step = 0.0        # mayor giro entre dos cuadros seguidos
+        for o in meshes:
+            o.rotation_mode = "QUATERNION"
+            inv_rest = rest[o.name].inverted()
+            prev = None
+            for i, f in enumerate(frames):
+                rel = world[o.name][i] @ inv_rest
+                loc, quat, scale = rel.decompose()
+                # Con el reposo cancelado esto tiene que ser ~1 en los tres ejes.
+                worst_scale = max(worst_scale, max(abs(s - 1.0) for s in scale))
+                if prev is not None:
+                    if quat.dot(prev) < 0.0:
+                        quat.negate()
+                        flips += 1
+                    step = math.degrees(2 * math.acos(
+                        min(1.0, abs(quat.dot(prev)))))
+                    worst_step = max(worst_step, step)
+                prev = quat.copy()
+                o.location = loc
+                o.rotation_quaternion = quat
+                o.keyframe_insert("location", frame=f)
+                o.keyframe_insert("rotation_quaternion", frame=f)
+        print(f"  signos corregidos: {flips}; desvío de escala máx: "
+              f"{worst_scale:.4f}; salto máx entre cuadros: {worst_step:.1f}°",
+              flush=True)
+
+        # Compuerta de calidad. Un hueso que gira más de 30° en un cuadro no es
+        # movimiento anatómico: es el rig evaluándose mal. Los drivers de
+        # Z-Biomechanics llaman funciones que registra el addon de Z-Anatomy, y
+        # bpy headless no lo carga (`NameError: name 'test' is not defined` en
+        # el log), así que parte de las poses sale corrupta. Mejor publicar
+        # menos clips y que los que salgan estén sanos.
+        if worst_step > MAX_STEP_DEG:
+            print(f"  !! descartado: {worst_step:.0f}° > {MAX_STEP_DEG}° por cuadro",
+                  flush=True)
+            continue
 
         # El GLB queda en metros y en Y-up (export_yup): la app aplica la
         # escala a milímetros con un grupo padre y NO lo rota.

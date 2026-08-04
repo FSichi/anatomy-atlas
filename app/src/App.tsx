@@ -94,6 +94,8 @@ export default function App() {
     const [ready, setReady] = useState(false);
     const [query, setQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
+    /** Hoja abierta en pantallas chicas. En escritorio se ignora. */
+    const [sheet, setSheet] = useState<null | 'layers' | 'info'>(null);
 
     const [clip, setClip] = useState<ClipState>({
         enabled: false,
@@ -357,19 +359,56 @@ export default function App() {
     const addMeasurePoint = (p: THREE.Vector3) =>
         setMeasurePoints(prev => (prev.length >= 2 ? [p] : [...prev, p]));
 
+    /**
+     * Ubicación de los paneles.
+     *
+     * En escritorio flotan sobre la escena, a los costados. En pantallas
+     * chicas eso no entra: el modelo es lo que importa y dos paneles fijos se
+     * lo comen, así que pasan a ser hojas inferiores que se abren desde la
+     * barra de pestañas y se cierran tocando la misma pestaña.
+     */
+    const dockClass = (side: 'left' | 'right', open: boolean) => {
+        const mobile = [
+            'absolute inset-x-2 bottom-16 z-20 flex-col gap-3',
+            'max-h-[58svh] overflow-y-auto overscroll-contain',
+            open ? 'flex' : 'hidden',
+        ].join(' ');
+        const desktop =
+            side === 'left'
+                ? 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:left-7 lg:bottom-auto lg:z-10 lg:w-[276px] lg:max-h-[calc(100%-3.5rem)]'
+                : 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:right-7 lg:bottom-7 lg:z-10 lg:w-[322px] lg:max-h-none lg:overflow-visible';
+        return `${mobile} ${desktop}`;
+    };
+
     return (
         <div className="flex h-full flex-col">
             {/* ── Barra superior ─────────────────────────────────── */}
-            <header className="border-rule bg-paper z-30 flex flex-wrap items-center gap-x-5 gap-y-2 border-b px-5 py-3">
+            <header className="border-rule bg-paper z-30 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b px-3 py-2.5 sm:px-5 sm:py-3">
                 <div className="flex items-baseline gap-2">
                     <span className="bg-clay size-2.5 -translate-y-px rounded-[3px]" aria-hidden />
                     <span className="font-sans text-[15px] font-semibold tracking-tight">
                         {t.brand}
                     </span>
-                    <span className="text-ink-faint font-mono text-[9.5px] tracking-[0.08em] uppercase">
+                    <span className="text-ink-faint hidden font-mono text-[9.5px] tracking-[0.08em] uppercase sm:inline">
                         anatómico
                     </span>
                 </div>
+
+                <a
+                    href="https://github.com/FSichi"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-ink-faint hover:text-clay-ink flex items-baseline gap-1 font-sans text-[11px] transition-colors"
+                    title={`${t.madeWith} ♥ ${t.by} Facundo Sichi`}
+                >
+                    <span className="hidden sm:inline">{t.madeWith}</span>
+                    <span className="text-clay">♥</span>
+                    <span className="hidden sm:inline">{t.by}</span>
+                    <span className="underline underline-offset-2">
+                        <span className="sm:hidden">FacuSichi</span>
+                        <span className="hidden sm:inline">Facundo Sichi</span>
+                    </span>
+                </a>
 
                 {(hasOrgans || hasMotion) && (
                     <div className="border-rule flex gap-0.5 rounded-full border p-0.5">
@@ -398,10 +437,14 @@ export default function App() {
                     </div>
                 )}
 
+                {/* En pantallas chicas las regiones no entran envueltas: pasan a
+                    una tira que se desplaza a lo ancho, que además es el gesto
+                    natural en táctil. */}
                 <nav
-                    className={`ms-auto flex flex-wrap gap-0.5 ${mode !== 'atlas' ? 'invisible' : ''}`}
+                    className={`order-last flex w-full gap-0.5 overflow-x-auto [scrollbar-width:none] lg:order-none lg:ms-auto lg:w-auto lg:flex-wrap lg:overflow-visible ${
+                        mode !== 'atlas' ? 'hidden' : ''
+                    }`}
                     aria-label={t.regions.label}
-                    aria-hidden={mode !== 'atlas'}
                 >
                     <Chip active={viewKey === OVERVIEW} onClick={() => setViewKey(OVERVIEW)}>
                         {t.regions.overview}
@@ -417,7 +460,7 @@ export default function App() {
                     ))}
                 </nav>
 
-                <div className="flex items-center gap-1">
+                <div className="ms-auto flex items-center gap-1 lg:ms-0">
                     <IconBtn label={t.search} onClick={() => setSearchOpen(true)}>
                         ⌕
                     </IconBtn>
@@ -525,6 +568,7 @@ export default function App() {
                     </svg>
                 )}
 
+                <div className={dockClass('left', sheet === 'layers')}>
                 <DissectionPanel
                     t={t}
                     view={view}
@@ -543,8 +587,10 @@ export default function App() {
                         if (!v) setMeasurePoints([]);
                     }}
                 />
+                </div>
+
                 {/* Columna derecha: ficha arriba, explorador abajo */}
-                <div className="absolute top-7 right-7 bottom-7 flex w-[322px] flex-col gap-4">
+                <div className={dockClass('right', sheet === 'info')}>
                 <section
                     ref={cardRef}
                     className="panel shrink-0 p-5"
@@ -626,8 +672,29 @@ export default function App() {
                 )}
                 </div>
 
-                {/* Métricas */}
-                <div className="text-ink-faint absolute bottom-6 left-7 grid gap-0.5 font-mono text-[10.5px] tabular-nums">
+                {/* Barra de pestañas: sólo en pantallas chicas. Abre y cierra
+                    las hojas; tocar la pestaña activa la cierra y devuelve la
+                    pantalla completa al modelo. */}
+                <nav className="border-rule bg-paper absolute inset-x-0 bottom-0 z-30 flex lg:hidden">
+                    <SheetTab
+                        active={sheet === 'layers'}
+                        onClick={() => setSheet(s => (s === 'layers' ? null : 'layers'))}
+                    >
+                        {t.dissection}
+                    </SheetTab>
+                    <SheetTab
+                        active={sheet === 'info'}
+                        onClick={() => setSheet(s => (s === 'info' ? null : 'info'))}
+                    >
+                        {t.structure}
+                    </SheetTab>
+                    <SheetTab active={false} onClick={() => setResetNonce(n => n + 1)}>
+                        {t.reset}
+                    </SheetTab>
+                </nav>
+
+                {/* Métricas: dato de escritorio; en móvil roba pantalla al modelo. */}
+                <div className="text-ink-faint absolute bottom-6 left-7 hidden gap-0.5 font-mono text-[10.5px] tabular-nums lg:grid">
                     <div>
                         <b className="text-ink-soft font-medium">
                             {countStructures(view).toLocaleString(lang)}
@@ -649,7 +716,7 @@ export default function App() {
 
                 {/* Pista de navegación: centrada entre los dos paneles, para
                     no chocar con la columna derecha. */}
-                <div className="pointer-events-none absolute right-[344px] bottom-6 left-[300px] flex flex-col items-center gap-1">
+                <div className="pointer-events-none absolute right-[344px] bottom-6 left-[300px] hidden flex-col items-center gap-1 lg:flex">
                     <p className="text-ink-faint text-center font-sans text-[11px]">{t.hint}</p>
                     <p className="text-ink-faint/70 text-center font-sans text-[10.5px]">
                         {t.keyboardHint}
@@ -750,6 +817,28 @@ export default function App() {
 }
 
 /* ── Piezas de interfaz ─────────────────────────────────────────── */
+
+function SheetTab({
+    active,
+    onClick,
+    children,
+}: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <button
+            onClick={onClick}
+            aria-pressed={active}
+            className={`flex-1 py-3 font-sans text-[12.5px] transition-colors ${
+                active ? 'text-clay-ink border-clay border-t-2' : 'text-ink-soft border-t-2 border-transparent'
+            }`}
+        >
+            {children}
+        </button>
+    );
+}
 
 function Chip({
     active,
