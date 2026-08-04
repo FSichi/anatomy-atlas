@@ -67,7 +67,23 @@ export const PROFILES: Record<QualityLevel, QualityProfile> = {
  * potente (y que el usuario suba) que arrancar en alto en un celular y que la
  * primera impresión sea un tirón.
  */
+/**
+ * Cache de la detección.
+ *
+ * Sin esto, cada llamada crea un `<canvas>` y pide un contexto WebGL sólo para
+ * leer el nombre de la GPU. Los navegadores limitan los contextos vivos (unos
+ * 16) y al pasarse descartan los más viejos — incluido el del visor, que se
+ * quedaba en negro. El hardware no cambia durante la sesión: se mide una vez.
+ */
+let cached: QualityLevel | null = null;
+
 export function detectQuality(): QualityLevel {
+    if (cached) return cached;
+    cached = detect();
+    return cached;
+}
+
+function detect(): QualityLevel {
     if (typeof navigator === 'undefined') return 'medium';
 
     const coarse = matchMedia('(pointer: coarse)').matches;
@@ -83,6 +99,8 @@ export function detectQuality(): QualityLevel {
         if (gl && dbg) {
             renderer = String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) ?? '');
         }
+        // Devolver el contexto de inmediato: es de un solo uso.
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
     } catch {
         /* algunos navegadores lo bloquean por privacidad: se ignora */
     }

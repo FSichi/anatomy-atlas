@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     LAYER_KEYS,
     OVERVIEW,
@@ -112,7 +112,8 @@ export default function App() {
     const [showBrowser, setShowBrowser] = useState(false);
     const [locked, setLocked] = useState(false);
     const [quality, setQuality] = useState<QualitySetting>(() => readQualitySetting());
-    const profile = resolveProfile(quality);
+    // useMemo: resolveProfile consulta el hardware; no debe correr por render.
+    const profile = useMemo(() => resolveProfile(quality), [quality]);
     const [mode, setMode] = useState<'atlas' | 'organs' | 'motion'>('atlas');
     const [hasOrgans, setHasOrgans] = useState(false);
     const [hasMotion, setHasMotion] = useState(false);
@@ -128,19 +129,41 @@ export default function App() {
     const [cardRect, setCardRect] = useState<DOMRect | null>(null);
     const [stageRect, setStageRect] = useState<DOMRect | null>(null);
 
+    /**
+     * Mide la ficha y el escenario para trazar la línea de referencia.
+     *
+     * Antes esto corría en un setInterval de 400 ms. `getBoundingClientRect`
+     * devuelve un objeto nuevo cada vez, así que React veía estado nuevo y
+     * re-renderizaba la app entera 2,5 veces por segundo — lo que reconstruía
+     * los materiales del visor y hacía parpadear el modelo.
+     *
+     * Un ResizeObserver avisa sólo cuando algo cambió de verdad, y sólo se
+     * guarda el rect si difiere del anterior.
+     */
     useEffect(() => {
+        const same = (a: DOMRect | null, b: DOMRect | null) =>
+            a === b ||
+            (!!a && !!b &&
+                a.left === b.left && a.top === b.top &&
+                a.width === b.width && a.height === b.height);
+
         const measure = () => {
-            setCardRect(cardRef.current?.getBoundingClientRect() ?? null);
-            setStageRect(stageRef.current?.getBoundingClientRect() ?? null);
+            const c = cardRef.current?.getBoundingClientRect() ?? null;
+            const s = stageRef.current?.getBoundingClientRect() ?? null;
+            setCardRect(prev => (same(prev, c) ? prev : c));
+            setStageRect(prev => (same(prev, s) ? prev : s));
         };
+
         measure();
+        const ro = new ResizeObserver(measure);
+        if (cardRef.current) ro.observe(cardRef.current);
+        if (stageRef.current) ro.observe(stageRef.current);
         addEventListener('resize', measure);
-        const id = setInterval(measure, 400);
         return () => {
+            ro.disconnect();
             removeEventListener('resize', measure);
-            clearInterval(id);
         };
-    }, []);
+    }, [mode]);
 
     const t = UI[lang];
 

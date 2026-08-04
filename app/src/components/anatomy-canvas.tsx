@@ -489,7 +489,15 @@ export function AnatomyCanvas({
     onMeasureLabel,
     onReady,
 }: AnatomyCanvasProps) {
-    const clipPlanes = useMemo(() => makeClipPlane(clip), [clip]);
+    // Depende de los VALORES, no de la identidad del objeto: el padre arma un
+    // `clip` nuevo en cada render, y con [clip] esto devolvía un array distinto
+    // cada vez, re-disparaba el efecto de materiales de cada capa y los
+    // recompilaba varias veces por segundo — eso era el parpadeo.
+    const clipPlanes = useMemo(
+        () => makeClipPlane(clip),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [clip.enabled, clip.axis, clip.at, clip.flipped]
+    );
 
     /**
      * Seleccionar al soltar, no al presionar.
@@ -508,7 +516,11 @@ export function AnatomyCanvas({
             camera={{ position: [0, 0, 2600], fov: 40, near: 1, far: 12000 }}
             dpr={[1, profile.dpr]}
             gl={{ antialias: profile.antialias, powerPreference: 'high-performance' }}
-            onPointerDown={e => {
+            // En CAPTURA a propósito: R3F escucha en el canvas, que es hijo de
+            // este contenedor, así que en burbuja su handler correría PRIMERO y
+            // este borraría el candidato que aquél acaba de anotar. En captura
+            // el orden es el correcto: primero se limpia, después se elige.
+            onPointerDownCapture={e => {
                 down.current = { x: e.clientX, y: e.clientY };
                 pending.current = null;
             }}
