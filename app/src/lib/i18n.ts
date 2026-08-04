@@ -61,6 +61,12 @@ export interface Strings {
     lockSelection: string;
     unlockSelection: string;
     keyboardHint: string;
+    quality: string;
+    qualityHint: string;
+    qualityAuto: string;
+    qualityLevels: Record<'low' | 'medium' | 'high', string>;
+    tissueWet: string;
+    tissueFlat: string;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
@@ -149,6 +155,12 @@ const es: Strings = {
     lockSelection: 'Bloquear la selección',
     unlockSelection: 'Desbloquear la selección',
     keyboardHint: 'Flechas para orbitar · Shift + flechas para desplazar · + y − para acercar',
+    quality: 'Calidad',
+    qualityHint: 'Automático detecta el equipo y elige por vos; ahora está en {level}. Bajalo si el modelo se mueve a tirones.',
+    qualityAuto: 'Automático',
+    qualityLevels: { low: 'Baja', medium: 'Media', high: 'Alta' },
+    tissueWet: 'tejido húmedo',
+    tissueFlat: 'tejido mate',
     panels: 'Paneles',
     browserToggleHint: 'El listado navegable de todo lo que hay en la región. Apagalo para dejar la escena más despejada.',
 };
@@ -236,6 +248,12 @@ const en: Strings = {
     lockSelection: 'Lock selection',
     unlockSelection: 'Unlock selection',
     keyboardHint: 'Arrows to orbit · Shift + arrows to pan · + and − to zoom',
+    quality: 'Quality',
+    qualityHint: 'Auto detects your device and picks for you; right now it is {level}. Lower it if the model stutters.',
+    qualityAuto: 'Auto',
+    qualityLevels: { low: 'Low', medium: 'Medium', high: 'High' },
+    tissueWet: 'wet tissue',
+    tissueFlat: 'matte tissue',
     panels: 'Panels',
     browserToggleHint: 'The browsable list of everything in the region. Turn it off for a clearer scene.',
 };

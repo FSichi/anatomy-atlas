@@ -1,5 +1,6 @@
 import { SOURCE_INFO, type SourceId } from '../lib/catalog';
 import type { Strings } from '../lib/i18n';
+import type { QualityProfile, QualitySetting } from '../lib/quality';
 
 /**
  * Modal de configuración. Hoy sólo elige la fuente de datos anatómicos, que es
@@ -23,8 +24,11 @@ export function SettingsModal({
     available,
     meta,
     showBrowser,
+    quality,
+    profile,
     onPick,
     onToggleBrowser,
+    onQuality,
     onClose,
 }: {
     open: boolean;
@@ -34,8 +38,11 @@ export function SettingsModal({
     available: SourceId[];
     meta: Record<string, SourceMeta | undefined>;
     showBrowser: boolean;
+    quality: QualitySetting;
+    profile: QualityProfile;
     onPick: (s: SourceId) => void;
     onToggleBrowser: (v: boolean) => void;
+    onQuality: (q: QualitySetting) => void;
     onClose: () => void;
 }) {
     if (!open) return null;
@@ -140,6 +147,32 @@ export function SettingsModal({
                             );
                         })}
                     </div>
+
+                    {/* Calidad */}
+                    <h3 className="eyebrow border-rule mt-5 border-t pt-4">{t.quality}</h3>
+                    <p className="text-ink-soft mt-1.5 text-[12.5px] leading-relaxed">
+                        {t.qualityHint.replace('{level}', t.qualityLevels[profile.level])}
+                    </p>
+                    <div className="mt-3 flex gap-1.5">
+                        {(['auto', 'low', 'medium', 'high'] as const).map(q => (
+                            <button
+                                key={q}
+                                onClick={() => onQuality(q)}
+                                aria-pressed={quality === q}
+                                className={`flex-1 rounded-md border px-2 py-1.5 font-sans text-[11.5px] transition-colors ${
+                                    quality === q
+                                        ? 'border-clay bg-clay/12 text-clay-ink'
+                                        : 'border-rule text-ink-soft hover:border-clay/50'
+                                }`}
+                            >
+                                {q === 'auto' ? t.qualityAuto : t.qualityLevels[q]}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-ink-faint mt-2 font-mono text-[10px] tabular-nums">
+                        {profile.dpr}× px · {profile.antialias ? 'AA' : 'sin AA'} ·{' '}
+                        {profile.material === 'physical' ? t.tissueWet : t.tissueFlat}
+                    </p>
 
                     <h3 className="eyebrow border-rule mt-5 border-t pt-4">{t.panels}</h3>
                     <label className="mt-2.5 flex cursor-pointer items-center gap-3">

@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { type ClipState, makeClipPlane } from '../lib/clipping';
+import type { QualityProfile } from '../lib/quality';
 import { LAYER_KEYS, framing, type LayerChunk, type LayerKey, type View } from '../lib/catalog';
 
 /** Sólo lo que usamos de OrbitControls, para no acoplarnos a three-stdlib. */
@@ -433,6 +434,7 @@ export interface AnatomyCanvasProps {
     measurePoints: THREE.Vector3[];
     /** Con el candado puesto, ningún clic cambia la selección. */
     locked: boolean;
+    profile: QualityProfile;
     onPick: (fma: string | null) => void;
     onMeasure: (p: THREE.Vector3) => void;
     onStats: (s: Stats) => void;
@@ -479,6 +481,7 @@ export function AnatomyCanvas({
     measuring,
     measurePoints,
     locked,
+    profile,
     onPick,
     onMeasure,
     onStats,
@@ -503,8 +506,8 @@ export function AnatomyCanvas({
     return (
         <Canvas
             camera={{ position: [0, 0, 2600], fov: 40, near: 1, far: 12000 }}
-            dpr={[1, 2]}
-            gl={{ antialias: true, powerPreference: 'high-performance' }}
+            dpr={[1, profile.dpr]}
+            gl={{ antialias: profile.antialias, powerPreference: 'high-performance' }}
             onPointerDown={e => {
                 down.current = { x: e.clientX, y: e.clientY };
                 pending.current = null;
@@ -560,7 +563,7 @@ export function AnatomyCanvas({
             <OrbitControls
                 makeDefault
                 enableDamping
-                dampingFactor={0.075}
+                dampingFactor={profile.damping}
                 enablePan
                 zoomToCursor
                 screenSpacePanning

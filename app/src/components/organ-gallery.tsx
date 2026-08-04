@@ -9,6 +9,7 @@ import {
     type OrganCatalog,
 } from '../lib/organs';
 import type { Strings } from '../lib/i18n';
+import type { QualityProfile } from '../lib/quality';
 
 /**
  * Galería de órganos: un órgano por vez, a máxima resolución.
@@ -27,12 +28,46 @@ const HIGHLIGHT = new THREE.MeshStandardMaterial({
     roughness: 0.3,
 });
 
+/**
+ * Material de tejido.
+ *
+ * En calidad alta se cambia a MeshPhysicalMaterial: `clearcoat` da la película
+ * húmeda que tiene una víscera fresca y `sheen` el rebote suave de superficie
+ * traslúcida. Sin eso, un difuso plano se lee como plástico por más geometría
+ * que tenga. No se usa `transmission` porque un órgano no es vidrio: lo
+ * volvería transparente en vez de húmedo.
+ */
+function tissueMaterial(src: THREE.MeshStandardMaterial, physical: boolean) {
+    if (!physical) {
+        src.vertexColors = true;
+        src.roughness = 0.42;
+        src.metalness = 0;
+        src.needsUpdate = true;
+        return src;
+    }
+    const m = new THREE.MeshPhysicalMaterial({
+        color: src.color,
+        vertexColors: true,
+        roughness: 0.38,
+        metalness: 0,
+        clearcoat: 0.45,
+        clearcoatRoughness: 0.35,
+        sheen: 0.5,
+        sheenRoughness: 0.7,
+        sheenColor: new THREE.Color('#e3a08c'),
+        side: THREE.FrontSide,
+    });
+    return m;
+}
+
 function OrganMesh({
     organ,
+    physical,
     selected,
     onPick,
 }: {
     organ: Organ;
+    physical: boolean;
     selected: string | null;
     onPick: (fma: string | null) => void;
 }) {
@@ -41,21 +76,15 @@ function OrganMesh({
     const base = useRef(new Map<string, THREE.Material>());
 
     useEffect(() => {
+        base.current.clear();
         root.traverse(o => {
             const m = o as THREE.Mesh;
             if (!m.isMesh) return;
-            if (!base.current.has(m.uuid)) {
-                const mat = m.material as THREE.MeshStandardMaterial;
-                // El GLB trae COLOR_0 con la oclusión: hay que habilitarlo y
-                // subir el brillo especular — el tejido es húmedo, no mate.
-                mat.vertexColors = true;
-                mat.roughness = 0.42;
-                mat.metalness = 0;
-                mat.needsUpdate = true;
-                base.current.set(m.uuid, mat);
-            }
+            const mat = tissueMaterial(m.material as THREE.MeshStandardMaterial, physical);
+            base.current.set(m.uuid, mat);
+            m.material = mat;
         });
-    }, [root]);
+    }, [root, physical]);
 
     useEffect(() => {
         root.traverse(o => {
@@ -102,7 +131,15 @@ function Frame({ radius }: { radius: number }) {
     return null;
 }
 
-export function OrganGallery({ t, lang }: { t: Strings; lang: string }) {
+export function OrganGallery({
+    t,
+    lang,
+    profile,
+}: {
+    t: Strings;
+    lang: string;
+    profile: QualityProfile;
+}) {
     const [catalog, setCatalog] = useState<OrganCatalog | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -196,10 +233,10 @@ export function OrganGallery({ t, lang }: { t: Strings; lang: string }) {
                 <div className="stage-grid text-ink pointer-events-none absolute inset-0" />
 
                 <Canvas
-                    key={organ.key}
+                    key={`${organ.key}-${profile.level}`}
                     camera={{ fov: 38, near: 0.5, far: 6000 }}
-                    dpr={[1, 2]}
-                    gl={{ antialias: true, powerPreference: 'high-performance' }}
+                    dpr={[1, profile.dpr]}
+                    gl={{ antialias: profile.antialias, powerPreference: 'high-performance' }}
                     onPointerMissed={() => setSelected(null)}
                 >
                     <ambientLight intensity={0.62} />
@@ -210,11 +247,22 @@ export function OrganGallery({ t, lang }: { t: Strings; lang: string }) {
 
                     <Suspense fallback={null}>
                         <group rotation={[-Math.PI / 2, 0, 0]}>
-                            <OrganMesh organ={organ} selected={selected} onPick={setSelected} />
+                            <OrganMesh
+                                organ={organ}
+                                physical={profile.material === 'physical'}
+                                selected={selected}
+                                onPick={setSelected}
+                            />
                         </group>
                     </Suspense>
 
-                    <OrbitControls makeDefault enableDamping dampingFactor={0.08} enablePan zoomToCursor />
+                    <OrbitControls
+                        makeDefault
+                        enableDamping
+                        dampingFactor={profile.damping}
+                        enablePan
+                        zoomToCursor
+                    />
                     <Frame radius={organ.radius} />
                     <Spin on={spin} />
                 </Canvas>

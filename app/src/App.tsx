@@ -26,6 +26,12 @@ import { AnatomyCanvas, type LayerState, type Stats } from './components/anatomy
 import { AXIS_SOURCE, type ClipAxis, type ClipState } from './lib/clipping';
 import { StructureBrowser } from './components/structure-browser';
 import { readUrl, writeUrl } from './lib/url-state';
+import {
+    readQualitySetting,
+    resolveProfile,
+    writeQualitySetting,
+    type QualitySetting,
+} from './lib/quality';
 
 /**
  * Ficha de cada fuente para el modal. Los números salen del censo del pipeline
@@ -104,6 +110,8 @@ export default function App() {
     // Apagado por defecto: la lista completa es útil pero tapa media pantalla.
     const [showBrowser, setShowBrowser] = useState(false);
     const [locked, setLocked] = useState(false);
+    const [quality, setQuality] = useState<QualitySetting>(() => readQualitySetting());
+    const profile = resolveProfile(quality);
     const [mode, setMode] = useState<'atlas' | 'organs'>('atlas');
     const [hasOrgans, setHasOrgans] = useState(false);
 
@@ -410,7 +418,7 @@ export default function App() {
             {/* ── Escenario ──────────────────────────────────────── */}
             {mode === 'organs' ? (
                 <main className="min-h-0 flex-1">
-                    <OrganGallery t={t} lang={lang} />
+                    <OrganGallery t={t} lang={lang} profile={profile} />
                 </main>
             ) : (
             <main
@@ -434,6 +442,7 @@ export default function App() {
                     measuring={measuring}
                     measurePoints={measurePoints}
                     locked={locked}
+                    profile={profile}
                     onPick={setSelected}
                     onMeasure={addMeasurePoint}
                     onStats={setStats}
@@ -681,11 +690,17 @@ export default function App() {
                 available={sources}
                 meta={SOURCE_META}
                 showBrowser={showBrowser}
+                quality={quality}
+                profile={profile}
                 onPick={s => {
                     setSource(s);
                     setSettingsOpen(false);
                 }}
                 onToggleBrowser={setShowBrowser}
+                onQuality={q => {
+                    setQuality(q);
+                    writeQualitySetting(q);
+                }}
                 onClose={() => setSettingsOpen(false)}
             />
 
