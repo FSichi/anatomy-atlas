@@ -1,0 +1,65 @@
+﻿                            |   CUOesophagus/GEOMETRY_EVAL() depends on
+                            |   OBOesophagus-profile/TRANSFORM_FINAL() via 'Curve Bevel Transform'
+                            |   OBOesophagus-profile/TRANSFORM_SIMULATION_INIT() via 'Simulation -> Final Transform'
+                            |   OBOesophagus-profile/TRANSFORM_EVAL() via 'Transform Eval -> Simulation Init'
+                            |   OBOesophagus-profile/TRANSFORM_PARENT() via 'Eval'
+                            |   OBOesophagus-profile/TRANSFORM_LOCAL() via 'ObLocal -> ObParent'
+                            |   OBOesophagus-profile/TRANSFORM_INIT() via 'Transform Init'
+                            |   OBOesophagus/GEOMETRY_EVAL() via 'Curve Follow Parent'
+                            |   OBOesophagus/MODIFIER(Solidify) via 'modifier stack order'
+                            |   OBOesophagus/GEOMETRY_EVAL_INIT() via 'Modifier'
+                            |   CUOesophagus/GEOMETRY_EVAL_DONE() via 'Object Geometry Base Data'
+                            |   CUOesophagus/GEOMETRY_EVAL() via 'ObData Geom Eval Done'
+                            | 
+Objetos MESH totales : 4569
+  con poligonos      : 2964
+  vacios (.j y otros): 1605
+
+=== Censo sin solapamiento (cada malla contada una vez) ===
+sistema         mallas     poligonos
+------------------------------------
+skeletal           278       577,870
+joints             410       133,965
+insertions         705        59,339
+muscular           670     2,045,745
+vascular            22        54,606
+lymphoid           159        80,137
+organs              76        66,413
+nervous            334       595,504
+sin sistema        310
+------------------------------------
+TOTAL             2964     3,613,579
+
+=== Nervios: cuantos son nervios por nombre ===
+  en el sistema nervioso : 334
+  con nombre de nervio   : 30
+      Accessory nucleus of oculomotor nerve.l
+      Accessory nucleus of oculomotor nerve.r
+      Choroid plexus.l
+      Choroid plexus.r
+      Cochlear nerve
+      Ganglia of sympathetic trunk.l
+      Ganglia of sympathetic trunk.r
+      Motor nucleus of facial nerve.l
+      Motor nucleus of facial nerve.r
+      Motor root of trigeminal nerve.l
+      Motor root of trigeminal nerve.r
+      Nucleus of abducens nerve.l
+      Nucleus of abducens nerve.r
+      Nucleus of accessory nerve.l
+      Nucleus of accessory nerve.r
+      Nucleus of hypoglossal nerve.l
+
+=== Vasos por nombre ===
+  en cardiovascular      : 22
+  con nombre de vaso     : 4
+      Anterior communicating artery
+      Cavernous sinus.l
+      Cavernous sinus.r
+      Pulmonary trunk
+
+=== Escala (solo geometria real) ===
+  X    -1.003 ..    0.342   extension   1.345
+  Y    -0.342 ..    0.342   extension   0.684
+  Z    -0.051 ..    1.747   extension   1.798
+scripts disabled for "C:\Users\facus\AppData\Local\Temp\claude\C--Users-facus-OneDrive-Escritorio-Medicin-App\d051819e-1dfe-4de3-8f97-9753ddf6585b\scratchpad\zanatomy\Z-Anatomy\Startup.blend", skipping 'z-anatomy.py'
