@@ -114,12 +114,14 @@
 }
 
 @layer components {
-    /* Etiqueta de sección: sans, versalitas espaciadas. */
+    /* Etiqueta de sección: sans, versalitas espaciadas. A 10px con más
+       interletrado se lee bastante mejor que a 9,5 apretado, y sigue leyéndose
+       como etiqueta y no como texto. */
     .eyebrow {
         font-family: var(--font-sans);
-        font-size: 9.5px;
+        font-size: 10px;
         font-weight: 600;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--ink-faint);
     }

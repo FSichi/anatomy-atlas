@@ -19,6 +19,7 @@ import { SOURCE_INFO, availableSources, type SourceId } from './lib/catalog';
 import { LANGS, UI, type Lang } from './lib/i18n';
 import { SettingsModal, type SourceMeta } from './components/settings-modal';
 import { OrganGallery } from './components/organ-gallery';
+import { DissectionPanel } from './components/dissection-panel';
 import { organsAvailable } from './lib/organs';
 import * as THREE from 'three';
 import {
@@ -467,171 +468,39 @@ export default function App() {
                     </svg>
                 )}
 
-                {/* Pila de disección */}
-                <section
-                    className="panel absolute top-6 left-6 w-[238px] p-4"
-                    aria-label={t.dissection}
-                >
-                    <h2 className="eyebrow mb-3">{t.dissection}</h2>
-
-                    <div className="flex flex-col">
-                        {[...PEEL_ORDER].reverse().map((k, i) => {
-                            const chunk = view.layers[k];
-                            const n = chunk?.structures?.length;
-                            return (
-                                <div
-                                    key={k}
-                                    className={`border-rule/60 py-1.5 ${i > 0 ? 'border-t' : ''} ${
-                                        chunk ? '' : 'opacity-40'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <span
-                                            className="size-2.5 shrink-0 rounded-[3px]"
-                                            style={{ background: TISSUE_COLOR[k] }}
-                                            aria-hidden
-                                        />
-                                        <button
-                                            onClick={() => peelTo(PEEL_ORDER.indexOf(k))}
-                                            disabled={!chunk}
-                                            title={t.peel}
-                                            className="hover:text-clay-ink flex-1 text-left font-sans text-[12.5px] transition-colors disabled:cursor-default"
-                                        >
-                                            {t.layers[k]}
-                                        </button>
-                                        <span className="text-ink-faint font-mono text-[10.5px] tabular-nums">
-                                            {n ?? '—'}
-                                        </span>
-                                        <Switch
-                                            checked={Boolean(chunk) && layers[k].visible}
-                                            disabled={!chunk}
-                                            onChange={v => setLayer(k, { visible: v })}
-                                            label={t.layers[k]}
-                                        />
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min={8}
-                                        max={100}
-                                        value={layers[k].opacity * 100}
-                                        disabled={!chunk || !layers[k].visible}
-                                        onChange={e =>
-                                            setLayer(k, { opacity: Number(e.target.value) / 100 })
-                                        }
-                                        aria-label={`${t.layers[k]} — opacidad`}
-                                        className="accent-clay mt-1.5 h-1 w-full cursor-pointer disabled:cursor-default disabled:opacity-30"
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* El pelado ya no es una fila de botones que desborda: se pela
-                        haciendo clic en el nombre de la capa, arriba. */}
-                    <p className="border-rule text-ink-faint mt-3 border-t pt-2.5 font-sans text-[10.5px] leading-relaxed">
-                        {t.peelHint}
-                    </p>
-
-                    {/* ── Corte anatómico ── */}
-                    <div className="border-rule mt-3 border-t pt-3">
-                        <div className="mb-2 flex items-center gap-2">
-                            <h3 className="eyebrow flex-1">{t.section}</h3>
-                            <Switch
-                                checked={clip.enabled}
-                                onChange={v => setClip(c => ({ ...c, enabled: v }))}
-                                label={t.section}
-                            />
-                        </div>
-
-                        {clip.enabled && (
-                            <>
-                                <div className="flex gap-1">
-                                    {(['sagittal', 'coronal', 'axial'] as ClipAxis[]).map(a => (
-                                        <button
-                                            key={a}
-                                            onClick={() =>
-                                                setClip(c => ({
-                                                    ...c,
-                                                    axis: a,
-                                                    at: Math.round(
-                                                        (view.bounds.min[AXIS_SOURCE[a]] +
-                                                            view.bounds.max[AXIS_SOURCE[a]]) /
-                                                            2
-                                                    ),
-                                                }))
-                                            }
-                                            aria-pressed={clip.axis === a}
-                                            className={`flex-1 rounded-md border px-1 py-1 font-sans text-[10px] transition-colors ${
-                                                clip.axis === a
-                                                    ? 'border-clay bg-clay/12 text-clay-ink'
-                                                    : 'border-rule text-ink-soft hover:border-clay/50'
-                                            }`}
-                                        >
-                                            {t.planes[a]}
-                                        </button>
-                                    ))}
-                                </div>
-                                <input
-                                    type="range"
-                                    min={clipMin}
-                                    max={clipMax}
-                                    value={clipAt}
-                                    onChange={e =>
-                                        setClip(c => ({ ...c, at: Number(e.target.value) }))
-                                    }
-                                    aria-label={t.section}
-                                    className="accent-clay mt-2 h-1 w-full cursor-pointer"
-                                />
-                                <button
-                                    onClick={() => setClip(c => ({ ...c, flipped: !c.flipped }))}
-                                    className="text-ink-faint hover:text-clay-ink mt-1 font-sans text-[10px] underline underline-offset-2"
-                                >
-                                    {t.flipSide}
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {/* ── Medición ── */}
-                    <div className="border-rule mt-3 border-t pt-3">
-                        <div className="flex items-center gap-2">
-                            <h3 className="eyebrow flex-1">{t.measure}</h3>
-                            <Switch
-                                checked={measuring}
-                                onChange={v => {
-                                    setMeasuring(v);
-                                    if (!v) setMeasurePoints([]);
-                                }}
-                                label={t.measure}
-                            />
-                        </div>
-                        <p className="text-ink-faint mt-1.5 font-sans text-[10px] leading-relaxed">
-                            {measureMm
-                                ? t.measureResult
-                                      .replace('{mm}', measureMm.toFixed(1))
-                                      .replace('{cm}', (measureMm / 10).toFixed(1))
-                                : measuring
-                                  ? t.measureHint
-                                  : t.measureOff}
-                        </p>
-                    </div>
-                </section>
-
+                <DissectionPanel
+                    t={t}
+                    view={view}
+                    layers={layers}
+                    clip={clip}
+                    clipMin={clipMin}
+                    clipMax={clipMax}
+                    clipAt={clipAt}
+                    measuring={measuring}
+                    measureMm={measureMm}
+                    onLayer={setLayer}
+                    onPeel={peelTo}
+                    onClip={patch => setClip(c => ({ ...c, ...patch }))}
+                    onMeasuring={v => {
+                        setMeasuring(v);
+                        if (!v) setMeasurePoints([]);
+                    }}
+                />
                 {/* Columna derecha: ficha arriba, explorador abajo */}
-                <div className="absolute top-6 right-6 bottom-6 flex w-[300px] flex-col gap-3">
+                <div className="absolute top-7 right-7 bottom-7 flex w-[322px] flex-col gap-4">
                 <section
                     ref={cardRef}
-                    className="panel shrink-0 p-4"
+                    className="panel shrink-0 p-5"
                     aria-live="polite"
                     aria-label={t.structure}
                 >
-                    <h2 className="eyebrow mb-3">{t.structure}</h2>
+                    <h2 className="eyebrow mb-3.5">{t.structure}</h2>
 
                     {selected && term ? (
                         <>
-                            <p className="text-[19px] leading-[1.24] text-balance">{name}</p>
+                            <p className="text-[21px] leading-[1.2] text-balance">{name}</p>
                             {term.la && (
-                                <p className="text-clay-ink mt-1 text-[13.5px] italic">{term.la}</p>
+                                <p className="text-clay-ink mt-1.5 text-[14px] italic">{term.la}</p>
                             )}
 
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -701,7 +570,7 @@ export default function App() {
                 </div>
 
                 {/* Métricas */}
-                <div className="text-ink-faint absolute bottom-5 left-6 grid gap-0.5 font-mono text-[10.5px] tabular-nums">
+                <div className="text-ink-faint absolute bottom-6 left-7 grid gap-0.5 font-mono text-[10.5px] tabular-nums">
                     <div>
                         <b className="text-ink-soft font-medium">
                             {countStructures(view).toLocaleString(lang)}
@@ -723,7 +592,7 @@ export default function App() {
 
                 {/* Pista de navegación: centrada entre los dos paneles, para
                     no chocar con la columna derecha. */}
-                <div className="pointer-events-none absolute right-[318px] bottom-5 left-[262px] flex flex-col items-center gap-1">
+                <div className="pointer-events-none absolute right-[344px] bottom-6 left-[300px] flex flex-col items-center gap-1">
                     <p className="text-ink-faint text-center font-sans text-[11px]">{t.hint}</p>
                     <button
                         onClick={() => setResetNonce(n => n + 1)}
@@ -855,37 +724,6 @@ function IconBtn({
             className="border-rule bg-surface text-ink-soft hover:border-clay hover:text-clay-ink grid size-8 place-items-center rounded-lg border transition-colors"
         >
             {children}
-        </button>
-    );
-}
-
-function Switch({
-    checked,
-    disabled,
-    onChange,
-    label,
-}: {
-    checked: boolean;
-    disabled?: boolean;
-    onChange: (v: boolean) => void;
-    label: string;
-}) {
-    return (
-        <button
-            role="switch"
-            aria-checked={checked}
-            aria-label={label}
-            disabled={disabled}
-            onClick={() => onChange(!checked)}
-            className={`relative h-[17px] w-[30px] shrink-0 rounded-full transition-colors disabled:cursor-default ${
-                checked ? 'bg-clay' : 'bg-rule'
-            }`}
-        >
-            <span
-                className={`bg-surface absolute top-0.5 size-[13px] rounded-full shadow-sm transition-transform ${
-                    checked ? 'translate-x-[15px]' : 'translate-x-0.5'
-                }`}
-            />
         </button>
     );
 }
