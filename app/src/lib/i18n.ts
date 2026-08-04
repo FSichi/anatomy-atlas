@@ -69,6 +69,9 @@ const es: Strings = {
     },
     layers: {
         skeletal: 'Huesos',
+        joints: 'Articulaciones',
+        insertions: 'Inserciones',
+        lymphoid: 'Linfoide',
         organs: 'Órganos',
         vascular: 'Vasos',
         nervous: 'Nervios',
@@ -141,6 +144,9 @@ const en: Strings = {
     },
     layers: {
         skeletal: 'Bones',
+        joints: 'Joints',
+        insertions: 'Insertions',
+        lymphoid: 'Lymphoid',
         organs: 'Organs',
         vascular: 'Vessels',
         nervous: 'Nerves',

@@ -4,9 +4,16 @@
  * es la única fuente de URLs.
  */
 
+/**
+ * Capas. `joints`, `insertions` y `lymphoid` sólo existen en Z-Anatomy y en la
+ * fuente combinada; la app las ignora sin ruido cuando el catálogo no las trae.
+ */
 export const LAYER_KEYS = [
     'skeletal',
+    'joints',
+    'insertions',
     'organs',
+    'lymphoid',
     'vascular',
     'nervous',
     'muscular',
@@ -18,7 +25,10 @@ export type LayerKey = (typeof LAYER_KEYS)[number];
 /** De la más profunda a la más superficial: define el orden del pelado. */
 export const PEEL_ORDER: LayerKey[] = [
     'skeletal',
+    'joints',
+    'insertions',
     'organs',
+    'lymphoid',
     'vascular',
     'nervous',
     'muscular',
@@ -27,7 +37,10 @@ export const PEEL_ORDER: LayerKey[] = [
 
 export const TISSUE_COLOR: Record<LayerKey, string> = {
     skeletal: '#ddd6c0',
+    joints: '#9ebccc',
+    insertions: '#d99e6b',
     organs: '#b8736a',
+    lymphoid: '#8caf8c',
     vascular: '#b0262e',
     nervous: '#e3c65f',
     muscular: '#b23f3a',

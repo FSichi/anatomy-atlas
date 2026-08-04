@@ -44,23 +44,27 @@ const SOURCE_META: Record<string, SourceMeta> = {
     },
     zanatomy: {
         id: 'zanatomy',
-        structures: 2964,
-        megabytes: 0,
+        structures: 2654,
+        megabytes: 21.6,
         strong: ['articulaciones 410', 'inserciones 705', 'linfoide 159', 'músculos 670'],
-        weak: ['vasos 22'],
+        weak: ['vasos 22', 'sin piel'],
     },
     mix: {
         id: 'mix',
-        structures: 0,
-        megabytes: 0,
-        strong: ['vasos 64', 'articulaciones 410', 'inserciones 705', 'linfoide 159'],
+        structures: 2443,
+        megabytes: 18.4,
+        strong: ['vasos 65', 'articulaciones 410', 'inserciones 705', 'linfoide 159', 'piel'],
         weak: [],
     },
 };
 
 const INITIAL_LAYERS: Record<LayerKey, LayerState> = {
     skeletal: { visible: true, opacity: 1 },
+    // Las inserciones tapan el hueso al que se adhieren: arrancan apagadas.
+    joints: { visible: true, opacity: 1 },
+    insertions: { visible: false, opacity: 1 },
     organs: { visible: true, opacity: 1 },
+    lymphoid: { visible: true, opacity: 1 },
     vascular: { visible: true, opacity: 1 },
     nervous: { visible: true, opacity: 1 },
     muscular: { visible: true, opacity: 1 },

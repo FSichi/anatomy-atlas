@@ -35,7 +35,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
 STL = os.path.join(RAW, "stl")
 APP = os.path.abspath(os.path.join(HERE, "..", "app"))
-PUBLIC = os.path.join(APP, "public", "anatomy", "bodyparts3d")
+SOURCE = "bodyparts3d"
+PUBLIC = os.path.join(APP, "public", "anatomy", SOURCE)
+# Prefijo de las URLs del catalogo: tiene que incluir la carpeta de la fuente,
+# si no la app pide /anatomy/<archivo> y en desarrollo Vite responde el
+# index.html por su fallback de SPA en vez de un 404 visible.
+URL_BASE = f"/anatomy/{SOURCE}"
 GLTF_CLI = os.path.join(APP, "node_modules", ".bin",
                         "gltf-transform.cmd" if os.name == "nt" else "gltf-transform")
 
@@ -167,9 +172,13 @@ def clip_box(mesh, lo, hi, pad=15.0):
 
 
 def compress(src, dst):
+    # Sin Draco los assets pesan ~6x mas. Antes esto caia a copiar en silencio
+    # y el error solo se notaba mirando los megabytes al final: mejor fallar.
     if not os.path.exists(GLTF_CLI):
-        shutil.copyfile(src, dst)
-        return
+        raise SystemExit(
+            f"falta @gltf-transform/cli en {GLTF_CLI}\n"
+            f"  instalalo con:  pnpm --dir app add -D @gltf-transform/cli"
+        )
     subprocess.run([GLTF_CLI, "draco", src, dst, "--quantize-position", "14"],
                    check=True, capture_output=True, shell=(os.name == "nt"))
 
@@ -300,6 +309,29 @@ def main():
     for m in assigned:
         counts[region_of[m]][layer_of[m]] += 1
 
+    # Mapa de referencia para otras fuentes: como Z-Anatomy es el MISMO cuerpo
+    # (0,5 mm de residuo tras alinear), cada una de sus mallas puede heredar la
+    # region de la estructura mas cercana de aca en vez de re-derivarla.
+    ref = []
+    for m in assigned:
+        b = bounds_cache.get(m)
+        if b is None:
+            continue
+        c = (b[0] + b[1]) / 2
+        ref.append({
+            "fma": m,
+            "region": region_of[m],
+            "layer": layer_of[m],
+            "c": [round(float(v), 1) for v in c],
+        })
+    with open(os.path.join(OUT, "region_map.json"), "w", encoding="utf-8") as fh:
+        json.dump({"center": [round(float(v), 3) for v in
+                              ((np.min([b[0] for b in boxes.values()], axis=0) +
+                                np.max([b[1] for b in boxes.values()], axis=0)) / 2)],
+                   "structures": ref}, fh)
+    print(f"\nMapa de regiones de referencia: {len(ref)} estructuras "
+          f"-> out/region_map.json", flush=True)
+
     print("\n=== Plan: mallas por region x capa ===", flush=True)
     hdr = f"{'region':<18} " + " ".join(f"{k[:8]:>9}" for k in LAYER_ORDER) + f" {'total':>7}"
     print(hdr, flush=True)
@@ -379,7 +411,7 @@ def main():
                     overview_pool.append((fma, lk, d))
             fname, nbytes, tris, entries, bnd = export_chunk(pieces, f"{key}__{lk}", center)
             region_entry["layers"][lk] = {
-                "file": f"/anatomy/{fname}", "bytes": nbytes,
+                "file": f"{URL_BASE}/{fname}", "bytes": nbytes,
                 "tris": tris, "structures": entries,
             }
             if bnd:
@@ -416,7 +448,7 @@ def main():
     for lk, pieces in ov_by_layer.items():
         fname, nbytes, tris, entries, bnd = export_chunk(pieces, f"overview__{lk}", center)
         catalog["overview"]["layers"][lk] = {
-            "file": f"/anatomy/{fname}", "bytes": nbytes, "tris": tris,
+            "file": f"{URL_BASE}/{fname}", "bytes": nbytes, "tris": tris,
             "structures": entries,
         }
         if bnd:
