@@ -391,6 +391,28 @@ function Ready({ onReady }: { onReady: () => void }) {
     return null;
 }
 
+/** Sólo en desarrollo: expone la escena para inspeccionar nombres de malla. */
+function DevBridge() {
+    const { scene, gl, camera } = useThree();
+    useEffect(() => {
+        if (!import.meta.env.DEV) return;
+        const w = window as unknown as Record<string, unknown>;
+        w.__atlas = {
+            scene,
+            gl,
+            camera,
+            meshNames: () => {
+                const out: string[] = [];
+                scene.traverse(o => {
+                    if ((o as THREE.Mesh).isMesh && o.name) out.push(o.name);
+                });
+                return out;
+            },
+        };
+    }, [scene, gl, camera]);
+    return null;
+}
+
 export function AnatomyCanvas({
     view,
     layers,
@@ -425,6 +447,7 @@ export function AnatomyCanvas({
 
             <StatsProbe onSample={onStats} />
             <Tracker selected={selected} onMove={onAnchor} />
+            <DevBridge />
             <ClipEnabler on={clip.enabled} />
             <MeasureLine points={measurePoints} onLabel={onMeasureLabel} />
 

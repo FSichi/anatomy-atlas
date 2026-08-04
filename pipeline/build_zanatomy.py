@@ -88,6 +88,14 @@ REGION_BUDGET = 900_000
 OVERVIEW_BUDGET = 550_000
 MIN_FACES = 40
 
+# El sufijo .g marca los TITULOS de cada coleccion, que Z-Anatomy incluye como
+# texto 3D al costado del modelo ('Skeletal system.g', 'Muscular system.g'...).
+# Son 11 y aparecen flotando junto al cuerpo si no se filtran.
+LABEL_SUFFIX = ".g"
+# Red de seguridad por si aparece otro tipo de anotacion: el cuerpo es simetrico
+# en X y no pasa de ~0,25 a cada lado; los rotulos viven en X = -1.
+BODY_X_LIMIT = -0.45
+
 
 # ── utilidades compartidas con el pipeline de BodyParts3D ────────────
 def decimate(mesh, target):
@@ -213,9 +221,35 @@ def main():
             if o.type == "MESH" and len(o.data.polygons):
                 layer_of.setdefault(o.name, key)
 
-    objs = [o for o in bpy.data.objects
-            if o.type == "MESH" and len(o.data.polygons) and o.name in layer_of]
-    print(f"Mallas con capa: {len(objs)}", flush=True)
+    todas = [o for o in bpy.data.objects
+             if o.type == "MESH" and len(o.data.polygons) and o.name in layer_of]
+
+    objs, rotulos = [], []
+    for o in todas:
+        if o.name.endswith(LABEL_SUFFIX):
+            rotulos.append(o.name)
+            continue
+        # Chequeo espacial: cualquier cosa muy a la izquierda del cuerpo es
+        # anotacion, no anatomia.
+        xs = [(o.matrix_world @ Vector(c))[0] for c in o.bound_box]
+        if max(xs) < BODY_X_LIMIT:
+            rotulos.append(o.name)
+            continue
+        objs.append(o)
+
+    print(f"Mallas con capa : {len(todas)}", flush=True)
+    print(f"  rotulos 3D descartados : {len(rotulos)}", flush=True)
+    for r in rotulos[:12]:
+        print(f"      {r}", flush=True)
+    print(f"  anatomia a exportar    : {len(objs)}", flush=True)
+
+    # Identificadores estables y a prueba de saneado. El GLTFLoader de three
+    # pasa los nombres por PropertyBinding.sanitizeNodeName, que convierte los
+    # espacios en '_' y ELIMINA . : / [ ]. Con nombres como
+    # 'Clavicular head of pectoralis major muscle.l' el nombre que queda en la
+    # escena no coincide con el del catalogo y la seleccion no encuentra nada.
+    # El indice va sobre la lista ordenada para que no cambie entre builds.
+    zid_of = {o.name: f"Z{i:05d}" for i, o in enumerate(sorted(objs, key=lambda x: x.name))}
 
     print("Extrayendo geometria y asignando region…", flush=True)
     t0 = time.time()
@@ -227,15 +261,16 @@ def main():
         c = (m.bounds[0] + m.bounds[1]) / 2
         # Region heredada de la estructura mas cercana de BodyParts3D.
         d = np.linalg.norm(ref_pts - c, axis=1)
-        items.append((o.name, layer_of[o.name], ref_reg[int(d.argmin())], m))
+        items.append((zid_of[o.name], o.name, layer_of[o.name],
+                      ref_reg[int(d.argmin())], m))
         if (i + 1) % 400 == 0:
             print(f"  {i + 1}/{len(objs)}  ({time.time() - t0:.0f}s)", flush=True)
 
     print(f"Extraidas {len(items)} mallas en {time.time() - t0:.0f}s", flush=True)
 
     by_region = defaultdict(lambda: defaultdict(list))
-    for name, layer, region, mesh in items:
-        by_region[region][layer].append((name, name, mesh))
+    for zid, name, layer, region, mesh in items:
+        by_region[region][layer].append((zid, name, mesh))
 
     print("\n=== Plan: mallas por region x capa ===", flush=True)
     hdr = f"{'region':<18}" + "".join(f"{k[:9]:>11}" for k in LAYER_ORDER) + f"{'total':>8}"

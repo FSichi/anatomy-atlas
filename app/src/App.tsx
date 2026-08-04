@@ -104,6 +104,27 @@ export default function App() {
     const [source, setSource] = useState<SourceId>('bodyparts3d');
     const [sources, setSources] = useState<SourceId[]>([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [showBrowser, setShowBrowser] = useState(true);
+
+    // Posiciones reales de la ficha y del escenario, para trazar la referencia.
+    const cardRef = useRef<HTMLElement>(null);
+    const stageRef = useRef<HTMLElement>(null);
+    const [cardRect, setCardRect] = useState<DOMRect | null>(null);
+    const [stageRect, setStageRect] = useState<DOMRect | null>(null);
+
+    useEffect(() => {
+        const measure = () => {
+            setCardRect(cardRef.current?.getBoundingClientRect() ?? null);
+            setStageRect(stageRef.current?.getBoundingClientRect() ?? null);
+        };
+        measure();
+        addEventListener('resize', measure);
+        const id = setInterval(measure, 400);
+        return () => {
+            removeEventListener('resize', measure);
+            clearInterval(id);
+        };
+    }, []);
 
     const t = UI[lang];
 
@@ -220,8 +241,34 @@ export default function App() {
 
     const measureMm =
         measurePoints.length === 2 ? measurePoints[0].distanceTo(measurePoints[1]) : null;
+
+    /**
+     * Geometría de la línea de referencia. Se calcula contra la posición real
+     * de la ficha en pantalla, no contra un margen fijo: la ficha cambia de alto
+     * según lo seleccionado, y una coordenada hardcodeada la deja apuntando a
+     * cualquier lado. Se omite si la estructura queda detrás de la ficha.
+     */
     const term: Term | undefined = selected ? terms[selected] : undefined;
     const name = term ? ((term[lang as keyof Term] as string) ?? term.en) : selected;
+
+    let leader: {
+        x: number;
+        y: number;
+        elbow: number;
+        cardX: number;
+        cardY: number;
+    } | null = null;
+
+    if (anchor && selected && term && cardRect && stageRect) {
+        const cardX = cardRect.left - stageRect.left;
+        const cardY = cardRect.top - stageRect.top + 26;
+        const elbow = cardX - 28;
+        // Si la estructura quedó a la derecha del codo, la línea se cruzaría
+        // sobre sí misma: mejor no dibujarla.
+        if (anchor.x + 26 < elbow) {
+            leader = { x: anchor.x, y: anchor.y, elbow, cardX, cardY };
+        }
+    }
 
     const layerOf = available.find(k => view.layers[k]?.structures?.some(s => s.fma === selected));
 
@@ -321,6 +368,7 @@ export default function App() {
 
             {/* ── Escenario ──────────────────────────────────────── */}
             <main
+                ref={stageRef}
                 className="relative flex-1 overflow-hidden"
                 style={{
                     background:
@@ -353,27 +401,33 @@ export default function App() {
                     </div>
                 )}
 
-                {/* Línea de referencia: la convención de las láminas anatómicas */}
-                {anchor && selected && (
+                {/* Línea de referencia: la convención de las láminas anatómicas.
+                    Va en codo desde la estructura hasta el borde de la ficha —
+                    una línea que termina en el vacío no señala nada. */}
+                {leader && (
                     <svg className="pointer-events-none absolute inset-0 h-full w-full">
                         <circle
-                            cx={anchor.x}
-                            cy={anchor.y}
+                            cx={leader.x}
+                            cy={leader.y}
                             r="13"
                             fill="none"
                             stroke="var(--clay)"
                             strokeWidth="1.2"
                         />
-                        <line
-                            x1={anchor.x + 13}
-                            y1={anchor.y}
-                            x2="calc(100% - 330px)"
-                            y2={anchor.y}
+                        <polyline
+                            points={[
+                                `${leader.x + 13},${leader.y}`,
+                                `${leader.elbow},${leader.y}`,
+                                `${leader.elbow},${leader.cardY}`,
+                                `${leader.cardX},${leader.cardY}`,
+                            ].join(' ')}
+                            fill="none"
                             stroke="var(--clay)"
                             strokeWidth="1"
                             strokeDasharray="3 3"
-                            opacity="0.7"
+                            opacity="0.75"
                         />
+                        <circle cx={leader.cardX} cy={leader.cardY} r="2.5" fill="var(--clay)" />
                     </svg>
                 )}
 
@@ -530,6 +584,7 @@ export default function App() {
                 {/* Columna derecha: ficha arriba, explorador abajo */}
                 <div className="absolute top-6 right-6 bottom-6 flex w-[300px] flex-col gap-3">
                 <section
+                    ref={cardRef}
                     className="panel shrink-0 p-4"
                     aria-live="polite"
                     aria-label={t.structure}
@@ -594,17 +649,19 @@ export default function App() {
                     )}
                 </section>
 
-                <StructureBrowser
-                    view={view}
-                    terms={terms}
-                    lang={lang}
-                    t={t}
-                    selected={selected}
-                    picked={picked}
-                    onSelect={selectAndFocus}
-                    onTogglePick={togglePick}
-                    onClearPicks={() => setPicked(new Set())}
-                />
+                {showBrowser && (
+                    <StructureBrowser
+                        view={view}
+                        terms={terms}
+                        lang={lang}
+                        t={t}
+                        selected={selected}
+                        picked={picked}
+                        onSelect={selectAndFocus}
+                        onTogglePick={togglePick}
+                        onClearPicks={() => setPicked(new Set())}
+                    />
+                )}
                 </div>
 
                 {/* Métricas */}
@@ -701,10 +758,12 @@ export default function App() {
                     source={source}
                     available={sources}
                     meta={SOURCE_META}
+                    showBrowser={showBrowser}
                     onPick={s => {
                         setSource(s);
                         setSettingsOpen(false);
                     }}
+                    onToggleBrowser={setShowBrowser}
                     onClose={() => setSettingsOpen(false)}
                 />
             </main>

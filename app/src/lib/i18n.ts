@@ -49,6 +49,8 @@ export interface Strings {
     notGenerated: string;
     sources: Record<SourceKey, string>;
     sourceDesc: Record<SourceKey, string>;
+    panels: string;
+    browserToggleHint: string;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
@@ -127,6 +129,8 @@ const es: Strings = {
             'Derivada de la anterior y muy expandida. Suma articulaciones, inserciones musculares y sistema linfoide.',
         mix: 'Lo mejor de ambas: los vasos y la ontología de BodyParts3D con las articulaciones e inserciones de Z-Anatomy.',
     },
+    panels: 'Paneles',
+    browserToggleHint: 'El listado navegable de todo lo que hay en la región. Apagalo para dejar la escena más despejada.',
 };
 
 const en: Strings = {
@@ -202,6 +206,8 @@ const en: Strings = {
             'Derived from it and heavily expanded. Adds joints, muscle insertions and the lymphoid system.',
         mix: 'The best of both: vessels and ontology from BodyParts3D, joints and insertions from Z-Anatomy.',
     },
+    panels: 'Panels',
+    browserToggleHint: 'The browsable list of everything in the region. Turn it off for a clearer scene.',
 };
 
 export const UI = { es, en };

@@ -22,7 +22,9 @@ export function SettingsModal({
     source,
     available,
     meta,
+    showBrowser,
     onPick,
+    onToggleBrowser,
     onClose,
 }: {
     open: boolean;
@@ -31,7 +33,9 @@ export function SettingsModal({
     source: SourceId;
     available: SourceId[];
     meta: Record<string, SourceMeta | undefined>;
+    showBrowser: boolean;
     onPick: (s: SourceId) => void;
+    onToggleBrowser: (v: boolean) => void;
     onClose: () => void;
 }) {
     if (!open) return null;
@@ -137,7 +141,32 @@ export function SettingsModal({
                         })}
                     </div>
 
-                    <p className="text-ink-faint mt-4 text-[11px] leading-relaxed">
+                    <h3 className="eyebrow border-rule mt-5 border-t pt-4">{t.panels}</h3>
+                    <label className="mt-2.5 flex cursor-pointer items-center gap-3">
+                        <span className="flex-1">
+                            <span className="block font-sans text-[13px]">{t.browser}</span>
+                            <span className="text-ink-soft block text-[12px] leading-relaxed">
+                                {t.browserToggleHint}
+                            </span>
+                        </span>
+                        <button
+                            role="switch"
+                            aria-checked={showBrowser}
+                            aria-label={t.browser}
+                            onClick={() => onToggleBrowser(!showBrowser)}
+                            className={`relative h-[18px] w-[32px] shrink-0 rounded-full transition-colors ${
+                                showBrowser ? 'bg-clay' : 'bg-rule'
+                            }`}
+                        >
+                            <span
+                                className={`bg-surface absolute top-0.5 size-[14px] rounded-full shadow-sm transition-transform ${
+                                    showBrowser ? 'translate-x-[16px]' : 'translate-x-0.5'
+                                }`}
+                            />
+                        </button>
+                    </label>
+
+                    <p className="text-ink-faint border-rule mt-5 border-t pt-3 text-[11px] leading-relaxed">
                         {SOURCE_INFO[source].attribution}
                     </p>
                 </div>
