@@ -51,6 +51,12 @@ export interface Strings {
     sourceDesc: Record<SourceKey, string>;
     panels: string;
     browserToggleHint: string;
+    modeAtlas: string;
+    modeOrgans: string;
+    organLibrary: string;
+    organParts: string;
+    organPartsHint: string;
+    autoRotate: string;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
@@ -129,6 +135,12 @@ const es: Strings = {
             'Derivada de la anterior y muy expandida. Suma articulaciones, inserciones musculares y sistema linfoide.',
         mix: 'Lo mejor de ambas: los vasos y la ontología de BodyParts3D con las articulaciones e inserciones de Z-Anatomy.',
     },
+    modeAtlas: 'Atlas',
+    modeOrgans: 'Órganos',
+    organLibrary: 'Biblioteca de órganos',
+    organParts: 'Piezas',
+    organPartsHint: 'Este órgano se compone de {n} estructuras reales y separables. Hacé clic en cualquiera para aislarla.',
+    autoRotate: 'Girar',
     panels: 'Paneles',
     browserToggleHint: 'El listado navegable de todo lo que hay en la región. Apagalo para dejar la escena más despejada.',
 };
@@ -206,6 +218,12 @@ const en: Strings = {
             'Derived from it and heavily expanded. Adds joints, muscle insertions and the lymphoid system.',
         mix: 'The best of both: vessels and ontology from BodyParts3D, joints and insertions from Z-Anatomy.',
     },
+    modeAtlas: 'Atlas',
+    modeOrgans: 'Organs',
+    organLibrary: 'Organ library',
+    organParts: 'Parts',
+    organPartsHint: 'This organ is made of {n} real, separable structures. Click any of them to isolate it.',
+    autoRotate: 'Spin',
     panels: 'Panels',
     browserToggleHint: 'The browsable list of everything in the region. Turn it off for a clearer scene.',
 };

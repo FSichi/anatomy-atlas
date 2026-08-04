@@ -45,7 +45,7 @@ export function SettingsModal({
 
     return (
         <div
-            className="scrim absolute inset-0 z-50 grid place-items-center px-6"
+            className="scrim fixed inset-0 z-50 grid place-items-center px-6"
             onClick={onClose}
             role="dialog"
             aria-modal="true"

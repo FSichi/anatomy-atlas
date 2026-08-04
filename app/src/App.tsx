@@ -18,6 +18,8 @@ import {
 import { SOURCE_INFO, availableSources, type SourceId } from './lib/catalog';
 import { LANGS, UI, type Lang } from './lib/i18n';
 import { SettingsModal, type SourceMeta } from './components/settings-modal';
+import { OrganGallery } from './components/organ-gallery';
+import { organsAvailable } from './lib/organs';
 import * as THREE from 'three';
 import {
     AXIS_SOURCE,
@@ -105,6 +107,12 @@ export default function App() {
     const [sources, setSources] = useState<SourceId[]>([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [showBrowser, setShowBrowser] = useState(true);
+    const [mode, setMode] = useState<'atlas' | 'organs'>('atlas');
+    const [hasOrgans, setHasOrgans] = useState(false);
+
+    useEffect(() => {
+        organsAvailable().then(setHasOrgans);
+    }, []);
 
     // Posiciones reales de la ficha y del escenario, para trazar la referencia.
     const cardRef = useRef<HTMLElement>(null);
@@ -332,7 +340,30 @@ export default function App() {
                     </span>
                 </div>
 
-                <nav className="ms-auto flex flex-wrap gap-0.5" aria-label={t.regions.label}>
+                {hasOrgans && (
+                    <div className="border-rule flex gap-0.5 rounded-full border p-0.5">
+                        {(['atlas', 'organs'] as const).map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setMode(m)}
+                                aria-pressed={mode === m}
+                                className={`rounded-full px-3 py-1 font-sans text-[12px] transition-colors ${
+                                    mode === m
+                                        ? 'bg-clay text-paper'
+                                        : 'text-ink-soft hover:text-ink'
+                                }`}
+                            >
+                                {m === 'atlas' ? t.modeAtlas : t.modeOrgans}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <nav
+                    className={`ms-auto flex flex-wrap gap-0.5 ${mode === 'organs' ? 'invisible' : ''}`}
+                    aria-label={t.regions.label}
+                    aria-hidden={mode === 'organs'}
+                >
                     <Chip active={viewKey === OVERVIEW} onClick={() => setViewKey(OVERVIEW)}>
                         {t.regions.overview}
                     </Chip>
@@ -367,6 +398,11 @@ export default function App() {
             </header>
 
             {/* ── Escenario ──────────────────────────────────────── */}
+            {mode === 'organs' ? (
+                <main className="min-h-0 flex-1">
+                    <OrganGallery t={t} lang={lang} />
+                </main>
+            ) : (
             <main
                 ref={stageRef}
                 className="relative flex-1 overflow-hidden"
@@ -751,22 +787,25 @@ export default function App() {
                         </div>
                     </div>
                 )}
-                <SettingsModal
-                    open={settingsOpen}
-                    t={t}
-                    lang={lang}
-                    source={source}
-                    available={sources}
-                    meta={SOURCE_META}
-                    showBrowser={showBrowser}
-                    onPick={s => {
-                        setSource(s);
-                        setSettingsOpen(false);
-                    }}
-                    onToggleBrowser={setShowBrowser}
-                    onClose={() => setSettingsOpen(false)}
-                />
             </main>
+            )}
+
+            {/* Fuera del escenario: el modal tiene que abrirse en los dos modos. */}
+            <SettingsModal
+                open={settingsOpen}
+                t={t}
+                lang={lang}
+                source={source}
+                available={sources}
+                meta={SOURCE_META}
+                showBrowser={showBrowser}
+                onPick={s => {
+                    setSource(s);
+                    setSettingsOpen(false);
+                }}
+                onToggleBrowser={setShowBrowser}
+                onClose={() => setSettingsOpen(false)}
+            />
 
             <footer className="border-rule text-ink-faint border-t px-5 py-2 text-[10.5px]">
                 {SOURCE_INFO[source].attribution}
