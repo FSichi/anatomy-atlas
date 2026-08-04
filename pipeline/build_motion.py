@@ -155,11 +155,14 @@ def main():
             if o not in meshes:
                 bpy.data.objects.remove(o, do_unlink=True)
 
-        # Pasar a milímetros, como el resto del proyecto.
-        for o in meshes:
-            o.scale = (o.scale[0] * SCALE, o.scale[1] * SCALE, o.scale[2] * SCALE)
-            o.location = (o.location[0] * SCALE, o.location[1] * SCALE,
-                          o.location[2] * SCALE)
+        # El GLB queda en metros a propósito. Escalar acá no sirve: las curvas
+        # de animación recién horneadas sobrescriben location y scale de cada
+        # objeto en el primer cuadro, así que cualquier cambio al transform se
+        # pierde apenas arranca la reproducción. La conversión a milímetros la
+        # hace la app con un grupo padre, que sí escala la animación incluida.
+        #
+        # El exportador sale con export_yup=True, o sea que el GLB ya viene en
+        # Y-up: la app NO debe rotarlo otra vez.
 
         tmp = tempfile.mkdtemp()
         plain = os.path.join(tmp, "a.glb")

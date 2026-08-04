@@ -16,6 +16,13 @@ import type { QualityProfile } from '../lib/quality';
 
 const DRACO = '/draco/';
 
+/**
+ * El GLB de movimiento quedó en metros: las curvas de animación horneadas
+ * conservan la escala original de Blender. Es el mismo factor que alinea
+ * Z-Anatomy con BodyParts3D (ver pipeline/measure_registration.py).
+ */
+const MM_PER_UNIT = 968.3;
+
 export interface MotionClip {
     key: string;
     es: string;
@@ -118,9 +125,10 @@ function Frame() {
         | null;
     useEffect(() => {
         if (!controls) return;
-        // El esqueleto mide ~1800 mm y su centro está a media altura.
-        controls.target.set(0, 900, 0);
-        camera.position.set(600, 1000, 2600);
+        // Tras escalar, el esqueleto mide ~1740 mm; se apunta a media altura
+        // y se mira de frente y algo elevado.
+        controls.target.set(0, 870, 0);
+        camera.position.set(500, 1050, 2400);
         controls.minDistance = 200;
         controls.maxDistance = 9000;
         controls.update();
@@ -218,8 +226,13 @@ export function MotionViewer({
             >
                 <div className="stage-grid text-ink pointer-events-none absolute inset-0" />
 
+                {/* La key sólo depende del antialias, que es un parámetro de
+                    creación del contexto. Antes incluía el clip y el nivel, así
+                    que cada cambio remontaba el Canvas y pedía un contexto WebGL
+                    nuevo; el navegador mantiene ~16 y descartaba los viejos —
+                    de ahí los "Context Lost" en cadena. El dpr sí es reactivo. */}
                 <Canvas
-                    key={`${clip.key}-${profile.level}`}
+                    key={profile.antialias ? 'aa' : 'noaa'}
                     camera={{ fov: 40, near: 1, far: 20000 }}
                     dpr={[1, profile.dpr]}
                     gl={{ antialias: profile.antialias, powerPreference: 'high-performance' }}
@@ -230,8 +243,18 @@ export function MotionViewer({
                     <directionalLight position={[-800, 600, -900]} intensity={0.5} color="#9dbcd8" />
 
                     <Suspense fallback={null}>
-                        <group rotation={[-Math.PI / 2, 0, 0]}>
+                        {/* Sin rotación: el exportador de Blender salió con
+                            export_yup, así que el GLB ya está en Y-up — rotarlo
+                            otra vez lo acostaba.
+
+                            La escala va acá y no en el pipeline: las curvas de
+                            animación horneadas sobrescriben la transformación
+                            de cada objeto en el primer cuadro, así que escalar
+                            los objetos antes de exportar no tenía efecto. Un
+                            grupo padre sí escala todo, animación incluida. */}
+                        <group scale={MM_PER_UNIT}>
                             <Skeleton
+                                key={clip.file}
                                 clip={clip}
                                 playing={playing}
                                 speed={speed}

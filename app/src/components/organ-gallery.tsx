@@ -255,8 +255,11 @@ export function OrganGallery({
             >
                 <div className="stage-grid text-ink pointer-events-none absolute inset-0" />
 
+                {/* Igual que en el visor de movimiento: la key sólo cambia
+                    con el antialias, que es parámetro de creación del
+                    contexto. El órgano se remonta en su propio componente. */}
                 <Canvas
-                    key={`${organ.key}-${profile.level}`}
+                    key={profile.antialias ? 'aa' : 'noaa'}
                     camera={{ fov: 38, near: 0.5, far: 6000 }}
                     dpr={[1, profile.dpr]}
                     gl={{ antialias: profile.antialias, powerPreference: 'high-performance' }}
@@ -271,6 +274,7 @@ export function OrganGallery({
                     <Suspense fallback={null}>
                         <group rotation={[-Math.PI / 2, 0, 0]}>
                             <OrganMesh
+                                key={organ.file}
                                 organ={organ}
                                 physical={profile.material === 'physical'}
                                 selected={selected}
