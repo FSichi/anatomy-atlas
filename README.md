@@ -1,5 +1,9 @@
 # Atlas anatómico por capas — cuerpo completo
 
+**→ [fsichi.github.io/anatomy-atlas](https://fsichi.github.io/anatomy-atlas/)**
+
+Hecho con ♥ por [Facundo Sichi](https://github.com/FSichi).
+
 Atlas anatómico web con capas reales (piel / vasos / músculos / huesos /
 nervios / órganos), donde **cada estructura es un objeto identificable con su
 ID de la ontología FMA**, no una malla indivisible.
