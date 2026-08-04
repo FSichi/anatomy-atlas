@@ -1,3 +1,3 @@
-allowBuilds:
-  sharp: set this to true or false
+# Tailwind 4 y sus binarios nativos (@tailwindcss/oxide, lightningcss) necesitan
+# ejecutar scripts de instalación. pnpm los bloquea por defecto desde la v10.
 dangerouslyAllowAllBuilds: true

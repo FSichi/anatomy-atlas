@@ -22,9 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Tiene que ser la misma mayor que generó el lockfile: pnpm 10 no lee un
+      # lockfile escrito por la 11 y el install falla.
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
 
       - uses: actions/setup-node@v4
         with:
