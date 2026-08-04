@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [react(), tailwindcss()],
-    server: { port: 5180 },
+    // El puerto lo asigna el entorno: sin fijarlo, dos sesiones pueden convivir.
+    server: { port: Number(process.env.PORT) || 5180 },
     build: {
         // Los GLB ya vienen comprimidos con Draco: que Vite no los reprocese.
         assetsInlineLimit: 0,

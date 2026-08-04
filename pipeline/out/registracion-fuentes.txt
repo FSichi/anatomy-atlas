@@ -1,0 +1,29 @@
+﻿Abriendo Z-Anatomy…
+  falta par: cráneo (BP3D)
+
+Pares emparejados: 9
+
+=== Escala ===
+  factor Z-Anatomy -> BodyParts3D : 968.3
+  dispersion (min..max)           : 967.7 .. 970.6
+  -> variacion de 0% entre huesos
+
+=== Traslacion (mm) ===
+      -0.4     -98.0     -13.1
+
+=== Residuo despues de alinear ===
+hueso                 error mm   tamano mm   error %
+----------------------------------------------------
+clavícula der              0.3         174        0%
+clavícula izq              0.4         174        0%
+húmero der                 0.5         327        0%
+húmero izq                 0.6         327        0%
+coxal der                  0.2         281        0%
+coxal izq                  1.8         280        1%
+fémur der                  1.3         460        0%
+fémur izq                  0.8         460        0%
+mandíbula                  0.3         151        0%
+----------------------------------------------------
+mediana                    0.5
+maximo                     1.8
+scripts disabled for "C:\Users\facus\AppData\Local\Temp\claude\C--Users-facus-OneDrive-Escritorio-Medicin-App\d051819e-1dfe-4de3-8f97-9753ddf6585b\scratchpad\zanatomy\Z-Anatomy\Startup.blend", skipping 'z-anatomy.py'

@@ -15,7 +15,7 @@ from collections import defaultdict
 RAW = os.environ["BP3D_RAW"]
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
-PUBLIC = os.path.abspath(os.path.join(HERE, "..", "app", "public", "anatomy"))
+PUBLIC = os.path.abspath(os.path.join(HERE, "..", "app", "public", "anatomy", "bodyparts3d"))
 TA2 = os.path.join(RAW, "..", "TA2.csv")
 
 LANGS = ["English", "Latin", "Français", "Español", "Portugues", "Italiano"]

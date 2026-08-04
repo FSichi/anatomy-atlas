@@ -15,7 +15,9 @@ import {
     type Term,
     type TermIndex,
 } from './lib/catalog';
+import { SOURCE_INFO, availableSources, type SourceId } from './lib/catalog';
 import { LANGS, UI, type Lang } from './lib/i18n';
+import { SettingsModal, type SourceMeta } from './components/settings-modal';
 import * as THREE from 'three';
 import {
     AXIS_SOURCE,
@@ -27,6 +29,34 @@ import {
 } from './components/anatomy-canvas';
 import { StructureBrowser } from './components/structure-browser';
 import { readUrl, writeUrl } from './lib/url-state';
+
+/**
+ * Ficha de cada fuente para el modal. Los números salen del censo del pipeline
+ * (`pipeline/out/zanatomy-census.txt`), no de estimaciones.
+ */
+const SOURCE_META: Record<string, SourceMeta> = {
+    bodyparts3d: {
+        id: 'bodyparts3d',
+        structures: 936,
+        megabytes: 21.6,
+        strong: ['vasos 64', 'ontología FMA', 'regiones'],
+        weak: ['sin articulaciones', 'sin inserciones'],
+    },
+    zanatomy: {
+        id: 'zanatomy',
+        structures: 2964,
+        megabytes: 0,
+        strong: ['articulaciones 410', 'inserciones 705', 'linfoide 159', 'músculos 670'],
+        weak: ['vasos 22'],
+    },
+    mix: {
+        id: 'mix',
+        structures: 0,
+        megabytes: 0,
+        strong: ['vasos 64', 'articulaciones 410', 'inserciones 705', 'linfoide 159'],
+        weak: [],
+    },
+};
 
 const INITIAL_LAYERS: Record<LayerKey, LayerState> = {
     skeletal: { visible: true, opacity: 1 },
@@ -67,7 +97,15 @@ export default function App() {
     const [measurePoints, setMeasurePoints] = useState<THREE.Vector3[]>([]);
     const [measureLabel, setMeasureLabel] = useState<{ x: number; y: number } | null>(null);
 
+    const [source, setSource] = useState<SourceId>('bodyparts3d');
+    const [sources, setSources] = useState<SourceId[]>([]);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+
     const t = UI[lang];
+
+    useEffect(() => {
+        availableSources().then(setSources);
+    }, []);
 
     // La URL manda al abrir: un link compartido tiene que reproducir la vista.
     const bootstrapped = useRef(false);
@@ -118,13 +156,21 @@ export default function App() {
     }, [viewKey, selected, lang, dark, layers, clip]);
 
     useEffect(() => {
-        loadCatalog()
+        let cancelled = false;
+        setCatalog(null);
+        setReady(false);
+        setSelected(null);
+        loadCatalog(source)
             .then(([c, tm]) => {
+                if (cancelled) return;
                 setCatalog(c);
                 setTerms(tm);
             })
-            .catch(e => setError(String(e?.message ?? e)));
-    }, []);
+            .catch(e => !cancelled && setError(String(e?.message ?? e)));
+        return () => {
+            cancelled = true;
+        };
+    }, [source]);
 
     // Ctrl/Cmd+K abre el buscador; Escape limpia la selección.
     useEffect(() => {
@@ -262,6 +308,9 @@ export default function App() {
                     </IconBtn>
                     <IconBtn label={t.theme} onClick={() => setDark(v => !v)}>
                         ◐
+                    </IconBtn>
+                    <IconBtn label={t.settings} onClick={() => setSettingsOpen(true)}>
+                        ⚙
                     </IconBtn>
                 </div>
             </header>
@@ -641,10 +690,22 @@ export default function App() {
                         </div>
                     </div>
                 )}
+                <SettingsModal
+                    open={settingsOpen}
+                    t={t}
+                    source={source}
+                    available={sources}
+                    meta={SOURCE_META}
+                    onPick={s => {
+                        setSource(s);
+                        setSettingsOpen(false);
+                    }}
+                    onClose={() => setSettingsOpen(false)}
+                />
             </main>
 
             <footer className="border-rule text-ink-faint border-t px-5 py-2 text-[10.5px]">
-                {catalog.attribution}
+                {SOURCE_INFO[source].attribution}
             </footer>
         </div>
     );

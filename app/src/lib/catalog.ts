@@ -171,16 +171,76 @@ export function buildSearchIndex(
     return rows;
 }
 
-export async function loadCatalog(): Promise<[AnatomyCatalog, TermIndex]> {
-    const [catalog, terms] = await Promise.all([
-        fetch('/anatomy/catalog.json').then(r => {
-            if (!r.ok) throw new Error(`catalog.json: ${r.status}`);
-            return r.json() as Promise<AnatomyCatalog>;
-        }),
-        fetch('/anatomy/terms.json').then(r => {
-            if (!r.ok) throw new Error(`terms.json: ${r.status}`);
-            return r.json() as Promise<TermIndex>;
-        }),
+/* ── Fuentes de datos ─────────────────────────────────────────────── */
+
+export const SOURCES = ['bodyparts3d', 'zanatomy', 'mix'] as const;
+export type SourceId = (typeof SOURCES)[number];
+
+export interface SourceInfo {
+    id: SourceId;
+    /** Carpeta bajo /anatomy donde vive el catálogo de esta fuente. */
+    dir: string;
+    attribution: string;
+}
+
+export const SOURCE_INFO: Record<SourceId, SourceInfo> = {
+    bodyparts3d: {
+        id: 'bodyparts3d',
+        dir: 'bodyparts3d',
+        attribution: 'BodyParts3D © The Database Center for Life Science · CC BY-SA 2.1 JP',
+    },
+    zanatomy: {
+        id: 'zanatomy',
+        dir: 'zanatomy',
+        attribution: 'Z-Anatomy · CC BY-SA 4.0',
+    },
+    mix: {
+        id: 'mix',
+        dir: 'mix',
+        attribution:
+            'BodyParts3D © The Database Center for Life Science (CC BY-SA 2.1 JP) + Z-Anatomy (CC BY-SA 4.0)',
+    },
+};
+
+export function isSourceId(v: string): v is SourceId {
+    return (SOURCES as readonly string[]).includes(v);
+}
+
+async function json<T>(url: string): Promise<T> {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: ${r.status}`);
+    return (await r.json()) as T;
+}
+
+export async function loadCatalog(source: SourceId): Promise<[AnatomyCatalog, TermIndex]> {
+    const base = `/anatomy/${SOURCE_INFO[source].dir}`;
+    return Promise.all([
+        json<AnatomyCatalog>(`${base}/catalog.json`),
+        json<TermIndex>(`${base}/terms.json`),
     ]);
-    return [catalog, terms];
+}
+
+/**
+ * Qué fuentes están realmente publicadas (el pipeline puede no haber generado
+ * todas).
+ *
+ * No alcanza con mirar el status: en desarrollo, Vite responde 200 con el
+ * index.html para cualquier ruta desconocida por el fallback de SPA. Hay que
+ * confirmar que lo que llega es un catálogo de verdad.
+ */
+export async function availableSources(): Promise<SourceId[]> {
+    const checks = await Promise.all(
+        SOURCES.map(async id => {
+            try {
+                const r = await fetch(`/anatomy/${SOURCE_INFO[id].dir}/catalog.json`);
+                if (!r.ok) return null;
+                if (!(r.headers.get('content-type') ?? '').includes('json')) return null;
+                const body = (await r.json()) as Partial<AnatomyCatalog>;
+                return Array.isArray(body.regions) && body.regions.length ? id : null;
+            } catch {
+                return null;
+            }
+        })
+    );
+    return checks.filter((x): x is SourceId => x !== null);
 }

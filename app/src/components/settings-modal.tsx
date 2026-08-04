@@ -1,0 +1,137 @@
+import { SOURCE_INFO, type SourceId } from '../lib/catalog';
+import type { Strings } from '../lib/i18n';
+
+/**
+ * Modal de configuración. Hoy sólo elige la fuente de datos anatómicos, que es
+ * la decisión con más impacto: cambia qué estructuras existen en el modelo.
+ */
+
+export interface SourceMeta {
+    id: SourceId;
+    structures: number;
+    megabytes: number;
+    /** Puntos fuertes y flojos, para que la elección sea informada. */
+    strong: string[];
+    weak: string[];
+}
+
+export function SettingsModal({
+    open,
+    t,
+    source,
+    available,
+    meta,
+    onPick,
+    onClose,
+}: {
+    open: boolean;
+    t: Strings;
+    source: SourceId;
+    available: SourceId[];
+    meta: Record<string, SourceMeta | undefined>;
+    onPick: (s: SourceId) => void;
+    onClose: () => void;
+}) {
+    if (!open) return null;
+
+    return (
+        <div
+            className="absolute inset-0 z-50 grid place-items-center bg-black/35 px-6"
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.settings}
+        >
+            <div
+                className="panel w-[620px] max-w-full overflow-hidden"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="border-rule flex items-baseline gap-3 border-b px-5 py-3.5">
+                    <h2 className="flex-1 font-sans text-[15px] font-semibold">{t.settings}</h2>
+                    <button
+                        onClick={onClose}
+                        className="text-ink-faint hover:text-ink font-sans text-[12px]"
+                    >
+                        {t.close}
+                    </button>
+                </div>
+
+                <div className="px-5 py-4">
+                    <h3 className="eyebrow">{t.dataSource}</h3>
+                    <p className="text-ink-faint mt-1.5 text-[12.5px] leading-relaxed">
+                        {t.dataSourceHint}
+                    </p>
+
+                    <div className="mt-4 grid gap-2">
+                        {(Object.keys(SOURCE_INFO) as SourceId[]).map(id => {
+                            const enabled = available.includes(id);
+                            const m = meta[id];
+                            const active = source === id;
+                            return (
+                                <button
+                                    key={id}
+                                    disabled={!enabled}
+                                    onClick={() => onPick(id)}
+                                    aria-pressed={active}
+                                    className={`rounded-lg border p-3 text-left transition-colors ${
+                                        active
+                                            ? 'border-clay bg-clay/8'
+                                            : enabled
+                                              ? 'border-rule hover:border-clay/50'
+                                              : 'border-rule opacity-45'
+                                    }`}
+                                >
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="font-sans text-[13.5px] font-medium">
+                                            {t.sources[id]}
+                                        </span>
+                                        {m && (
+                                            <span className="text-ink-faint font-mono text-[10.5px] tabular-nums">
+                                                {m.structures.toLocaleString()} ·{' '}
+                                                {m.megabytes.toFixed(1)} MB
+                                            </span>
+                                        )}
+                                        {!enabled && (
+                                            <span className="text-ink-faint ms-auto font-sans text-[10.5px]">
+                                                {t.notGenerated}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <p className="text-ink-soft mt-1 text-[12px] leading-relaxed">
+                                        {t.sourceDesc[id]}
+                                    </p>
+
+                                    {m && (
+                                        <div className="mt-2 flex flex-wrap gap-1">
+                                            {m.strong.map(s => (
+                                                <span
+                                                    key={s}
+                                                    className="rounded-[4px] border border-emerald-600/30 bg-emerald-600/10 px-1.5 py-0.5 font-mono text-[9.5px] text-emerald-700 dark:text-emerald-400"
+                                                >
+                                                    + {s}
+                                                </span>
+                                            ))}
+                                            {m.weak.map(s => (
+                                                <span
+                                                    key={s}
+                                                    className="border-rule bg-sunk text-ink-faint rounded-[4px] border px-1.5 py-0.5 font-mono text-[9.5px]"
+                                                >
+                                                    − {s}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <p className="text-ink-faint mt-4 text-[11px] leading-relaxed">
+                        {SOURCE_INFO[source].attribution}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}

@@ -42,9 +42,17 @@ export interface Strings {
     measureOff: string;
     measureHint: string;
     measureResult: string;
+    settings: string;
+    close: string;
+    dataSource: string;
+    dataSourceHint: string;
+    notGenerated: string;
+    sources: Record<SourceKey, string>;
+    sourceDesc: Record<SourceKey, string>;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
+type SourceKey = 'bodyparts3d' | 'zanatomy' | 'mix';
 
 const es: Strings = {
     brand: 'Atlas',
@@ -98,6 +106,24 @@ const es: Strings = {
     measureOff: 'Activá la medición y marcá dos puntos sobre el modelo.',
     measureHint: 'Marcá dos puntos. El tercer clic reinicia.',
     measureResult: '{mm} mm · {cm} cm',
+    settings: 'Configuración',
+    close: 'Cerrar',
+    dataSource: 'Fuente de datos anatómicos',
+    dataSourceHint:
+        'Las dos fuentes son el mismo cuerpo escaneado: se superponen con menos de 2 mm de error, así que se pueden combinar sin deformar nada.',
+    notGenerated: 'sin generar',
+    sources: {
+        bodyparts3d: 'BodyParts3D',
+        zanatomy: 'Z-Anatomy',
+        mix: 'Combinada',
+    },
+    sourceDesc: {
+        bodyparts3d:
+            'La base original. Ontología FMA con identificadores estables y la mejor cobertura vascular disponible.',
+        zanatomy:
+            'Derivada de la anterior y muy expandida. Suma articulaciones, inserciones musculares y sistema linfoide.',
+        mix: 'Lo mejor de ambas: los vasos y la ontología de BodyParts3D con las articulaciones e inserciones de Z-Anatomy.',
+    },
 };
 
 const en: Strings = {
@@ -152,6 +178,24 @@ const en: Strings = {
     measureOff: 'Turn measurement on and mark two points on the model.',
     measureHint: 'Mark two points. A third click starts over.',
     measureResult: '{mm} mm · {cm} cm',
+    settings: 'Settings',
+    close: 'Close',
+    dataSource: 'Anatomical data source',
+    dataSourceHint:
+        'Both sources are the same scanned body: they register to within 2 mm, so they can be combined without distorting anything.',
+    notGenerated: 'not generated',
+    sources: {
+        bodyparts3d: 'BodyParts3D',
+        zanatomy: 'Z-Anatomy',
+        mix: 'Combined',
+    },
+    sourceDesc: {
+        bodyparts3d:
+            'The original base. FMA ontology with stable identifiers and the best vascular coverage available.',
+        zanatomy:
+            'Derived from it and heavily expanded. Adds joints, muscle insertions and the lymphoid system.',
+        mix: 'The best of both: vessels and ontology from BodyParts3D, joints and insertions from Z-Anatomy.',
+    },
 };
 
 export const UI = { es, en };

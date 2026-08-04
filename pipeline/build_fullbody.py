@@ -35,7 +35,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
 STL = os.path.join(RAW, "stl")
 APP = os.path.abspath(os.path.join(HERE, "..", "app"))
-PUBLIC = os.path.join(APP, "public", "anatomy")
+PUBLIC = os.path.join(APP, "public", "anatomy", "bodyparts3d")
 GLTF_CLI = os.path.join(APP, "node_modules", ".bin",
                         "gltf-transform.cmd" if os.name == "nt" else "gltf-transform")
 
