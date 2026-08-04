@@ -3,8 +3,10 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import {
+    ORGAN_CATEGORIES,
     TISSUE_SWATCH,
     loadOrgans,
+    type OrganCategory,
     type Organ,
     type OrganCatalog,
 } from '../lib/organs';
@@ -142,6 +144,7 @@ export function OrganGallery({
 }) {
     const [catalog, setCatalog] = useState<OrganCatalog | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [cat, setCat] = useState<OrganCategory>('organ');
     const [activeKey, setActiveKey] = useState<string | null>(null);
     const [selected, setSelected] = useState<string | null>(null);
     const [spin, setSpin] = useState(false);
@@ -170,7 +173,9 @@ export function OrganGallery({
         );
     }
 
-    const organ = catalog.organs.find(o => o.key === activeKey) ?? catalog.organs[0];
+    const inCat = catalog.organs.filter(o => o.cat === cat);
+    const organ =
+        inCat.find(o => o.key === activeKey) ?? inCat[0] ?? catalog.organs[0];
     const part = organ.structures.find(s => s.fma === selected);
 
     return (
@@ -178,8 +183,26 @@ export function OrganGallery({
             {/* Biblioteca */}
             <aside className="panel flex min-h-0 flex-col overflow-hidden">
                 <h2 className="eyebrow border-rule border-b px-4 py-3">{t.organLibrary}</h2>
+
+                <div className="border-rule flex gap-1 border-b px-3 py-2">
+                    {ORGAN_CATEGORIES.filter(c => catalog.organs.some(o => o.cat === c)).map(c => (
+                        <button
+                            key={c}
+                            onClick={() => setCat(c)}
+                            aria-pressed={cat === c}
+                            className={`flex-1 rounded-full border px-2 py-1 font-sans text-[11px] transition-colors ${
+                                cat === c
+                                    ? 'border-clay bg-clay/12 text-clay-ink'
+                                    : 'border-rule text-ink-soft hover:border-clay/50'
+                            }`}
+                        >
+                            {t.organCats[c]}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="min-h-0 flex-1 overflow-y-auto py-1">
-                    {catalog.organs.map(o => {
+                    {catalog.organs.filter(o => o.cat === cat).map(o => {
                         const active = o.key === organ.key;
                         return (
                             <button

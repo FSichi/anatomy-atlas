@@ -21,6 +21,7 @@ import { SettingsModal, type SourceMeta } from './components/settings-modal';
 import { OrganGallery } from './components/organ-gallery';
 import { DissectionPanel } from './components/dissection-panel';
 import { organsAvailable } from './lib/organs';
+import { MotionViewer, motionAvailable } from './components/motion-viewer';
 import * as THREE from 'three';
 import { AnatomyCanvas, type LayerState, type Stats } from './components/anatomy-canvas';
 import { AXIS_SOURCE, type ClipAxis, type ClipState } from './lib/clipping';
@@ -112,11 +113,13 @@ export default function App() {
     const [locked, setLocked] = useState(false);
     const [quality, setQuality] = useState<QualitySetting>(() => readQualitySetting());
     const profile = resolveProfile(quality);
-    const [mode, setMode] = useState<'atlas' | 'organs'>('atlas');
+    const [mode, setMode] = useState<'atlas' | 'organs' | 'motion'>('atlas');
     const [hasOrgans, setHasOrgans] = useState(false);
+    const [hasMotion, setHasMotion] = useState(false);
 
     useEffect(() => {
         organsAvailable().then(setHasOrgans);
+        motionAvailable().then(setHasMotion);
     }, []);
 
     // Posiciones reales de la ficha y del escenario, para trazar la referencia.
@@ -345,9 +348,13 @@ export default function App() {
                     </span>
                 </div>
 
-                {hasOrgans && (
+                {(hasOrgans || hasMotion) && (
                     <div className="border-rule flex gap-0.5 rounded-full border p-0.5">
-                        {(['atlas', 'organs'] as const).map(m => (
+                        {([
+                            'atlas',
+                            ...(hasOrgans ? (['organs'] as const) : []),
+                            ...(hasMotion ? (['motion'] as const) : []),
+                        ] as const).map(m => (
                             <button
                                 key={m}
                                 onClick={() => setMode(m)}
@@ -358,16 +365,20 @@ export default function App() {
                                         : 'text-ink-soft hover:text-ink'
                                 }`}
                             >
-                                {m === 'atlas' ? t.modeAtlas : t.modeOrgans}
+                                {m === 'atlas'
+                                    ? t.modeAtlas
+                                    : m === 'organs'
+                                      ? t.modeOrgans
+                                      : t.modeMotion}
                             </button>
                         ))}
                     </div>
                 )}
 
                 <nav
-                    className={`ms-auto flex flex-wrap gap-0.5 ${mode === 'organs' ? 'invisible' : ''}`}
+                    className={`ms-auto flex flex-wrap gap-0.5 ${mode !== 'atlas' ? 'invisible' : ''}`}
                     aria-label={t.regions.label}
-                    aria-hidden={mode === 'organs'}
+                    aria-hidden={mode !== 'atlas'}
                 >
                     <Chip active={viewKey === OVERVIEW} onClick={() => setViewKey(OVERVIEW)}>
                         {t.regions.overview}
@@ -419,6 +430,10 @@ export default function App() {
             {mode === 'organs' ? (
                 <main className="min-h-0 flex-1">
                     <OrganGallery t={t} lang={lang} profile={profile} />
+                </main>
+            ) : mode === 'motion' ? (
+                <main className="min-h-0 flex-1">
+                    <MotionViewer t={t} lang={lang} profile={profile} />
                 </main>
             ) : (
             <main

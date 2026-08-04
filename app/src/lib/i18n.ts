@@ -67,6 +67,14 @@ export interface Strings {
     qualityLevels: Record<'low' | 'medium' | 'high', string>;
     tissueWet: string;
     tissueFlat: string;
+    modeMotion: string;
+    motionClips: string;
+    motionHint: string;
+    motionFrames: string;
+    play: string;
+    pause: string;
+    timeline: string;
+    organCats: Record<'organ' | 'bone' | 'muscle', string>;
 }
 
 type ClipAxisKey = 'sagittal' | 'coronal' | 'axial';
@@ -161,6 +169,14 @@ const es: Strings = {
     qualityLevels: { low: 'Baja', medium: 'Media', high: 'Alta' },
     tissueWet: 'tejido húmedo',
     tissueFlat: 'tejido mate',
+    modeMotion: 'Movimiento',
+    motionClips: 'Movimientos',
+    motionHint: 'Esqueleto de {n} huesos animado sobre un rig con límites de rotación anatómicos. Arrastrá la línea de tiempo para estudiar un gesto cuadro a cuadro.',
+    motionFrames: 'cuadros',
+    play: 'Reproducir',
+    pause: 'Pausar',
+    timeline: 'Línea de tiempo',
+    organCats: { organ: 'Órganos', bone: 'Huesos', muscle: 'Músculos' },
     panels: 'Paneles',
     browserToggleHint: 'El listado navegable de todo lo que hay en la región. Apagalo para dejar la escena más despejada.',
 };
@@ -254,6 +270,14 @@ const en: Strings = {
     qualityLevels: { low: 'Low', medium: 'Medium', high: 'High' },
     tissueWet: 'wet tissue',
     tissueFlat: 'matte tissue',
+    modeMotion: 'Motion',
+    motionClips: 'Motions',
+    motionHint: 'A {n}-bone skeleton animated on a rig with anatomical rotation limits. Drag the timeline to study a gesture frame by frame.',
+    motionFrames: 'frames',
+    play: 'Play',
+    pause: 'Pause',
+    timeline: 'Timeline',
+    organCats: { organ: 'Organs', bone: 'Bones', muscle: 'Muscles' },
     panels: 'Panels',
     browserToggleHint: 'The browsable list of everything in the region. Turn it off for a clearer scene.',
 };

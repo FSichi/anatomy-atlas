@@ -7,6 +7,9 @@
  * oclusión ambiental ya horneada en los colores de vértice.
  */
 
+export const ORGAN_CATEGORIES = ['organ', 'bone', 'muscle'] as const;
+export type OrganCategory = (typeof ORGAN_CATEGORIES)[number];
+
 export interface OrganPart {
     fma: string;
     tissue: string;
@@ -19,6 +22,8 @@ export interface Organ {
     es: string;
     en: string;
     system: string;
+    /** organ | bone | muscle — agrupa la biblioteca. */
+    cat: OrganCategory;
     file: string;
     bytes: number;
     tris: number;
@@ -44,6 +49,8 @@ export const TISSUE_SWATCH: Record<string, string> = {
     bile: '#9ea15c',
     urinary: '#b36657',
     sense: '#d9d7d4',
+    bone: '#e6e0cc',
+    muscle_belly: '#ad423d',
 };
 
 export async function loadOrgans(): Promise<OrganCatalog> {

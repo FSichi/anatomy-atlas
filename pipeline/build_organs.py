@@ -46,7 +46,7 @@ MAX_FACES = 220_000
 # Tejido: base y acento. El acento distingue las piezas acompanantes
 # (coronarias sobre el miocardio, vesicula sobre el higado).
 TISSUE = {
-    "muscle": [0.72, 0.29, 0.27],
+    "muscle": [0.68, 0.26, 0.24],
     "vessel": [0.68, 0.16, 0.19],
     "vein": [0.36, 0.36, 0.55],
     "neural": [0.80, 0.74, 0.68],
@@ -56,6 +56,8 @@ TISSUE = {
     "bile": [0.62, 0.63, 0.36],
     "urinary": [0.70, 0.40, 0.34],
     "sense": [0.85, 0.84, 0.82],
+    "bone": [0.90, 0.88, 0.80],
+    "muscle_belly": [0.68, 0.26, 0.24],
 }
 
 # Cada entrada de la galeria agrupa las piezas que forman el organo.
@@ -109,6 +111,122 @@ ORGANS = [
     {
         "key": "eye", "es": "Ojo", "en": "Eye", "system": "Sensorial",
         "parts": [("FMA12513", "sense")],
+    },
+
+    # ── Huesos ────────────────────────────────────────────────────────
+    {
+        "key": "skull", "es": "Cráneo", "en": "Skull", "system": "Esquelético",
+        "cat": "bone",
+        "parts": [("FMA52734", "bone"), ("FMA52788", "bone"), ("FMA52789", "bone"),
+                  ("FMA52738", "bone"), ("FMA52739", "bone"), ("FMA52735", "bone"),
+                  ("FMA52736", "bone"), ("FMA52748", "bone"), ("FMA9710", "bone")],
+    },
+    {
+        "key": "spine", "es": "Columna vertebral", "en": "Spine",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA12519", "bone"), ("FMA12520", "bone"), ("FMA12521", "bone"),
+                  ("FMA12522", "bone"), ("FMA12523", "bone"), ("FMA12524", "bone"),
+                  ("FMA12525", "bone"), ("FMA9165", "bone"), ("FMA9187", "bone"),
+                  ("FMA9209", "bone"), ("FMA9248", "bone"), ("FMA9922", "bone"),
+                  ("FMA9945", "bone"), ("FMA9968", "bone"), ("FMA9991", "bone"),
+                  ("FMA10014", "bone"), ("FMA10037", "bone"), ("FMA10059", "bone"),
+                  ("FMA10081", "bone"), ("FMA16202", "bone")],
+    },
+    {
+        "key": "ribcage", "es": "Caja torácica", "en": "Rib cage",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA7486", "bone"), ("FMA7487", "bone"), ("FMA7488", "bone"),
+                  ("FMA7857", "bone"), ("FMA7882", "bone"), ("FMA7909", "bone"),
+                  ("FMA7987", "bone"), ("FMA8012", "bone"), ("FMA8039", "bone")],
+    },
+    {
+        "key": "pelvis", "es": "Pelvis", "en": "Pelvis",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA16586", "bone"), ("FMA16587", "bone"), ("FMA16202", "bone")],
+    },
+    {
+        "key": "armbones", "es": "Huesos del brazo", "en": "Arm bones",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA13322", "bone"), ("FMA13395", "bone"), ("FMA23130", "bone"),
+                  ("FMA23464", "bone"), ("FMA23467", "bone")],
+    },
+    {
+        "key": "legbones", "es": "Huesos de la pierna", "en": "Leg bones",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA24474", "bone"), ("FMA24486", "bone"), ("FMA24477", "bone"),
+                  ("FMA24480", "bone")],
+    },
+    {
+        "key": "hand", "es": "Mano", "en": "Hand",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA24435", "bone"), ("FMA24437", "bone"), ("FMA24441", "bone"),
+                  ("FMA24443", "bone"), ("FMA23725", "bone"), ("FMA24446", "bone"),
+                  ("FMA24448", "bone")],
+    },
+    {
+        "key": "foot", "es": "Pie", "en": "Foot",
+        "system": "Esquelético", "cat": "bone",
+        "parts": [("FMA24482", "bone"), ("FMA24497", "bone"), ("FMA24507", "bone"),
+                  ("FMA24509", "bone"), ("FMA24511", "bone"), ("FMA24513", "bone"),
+                  ("FMA24515", "bone")],
+    },
+
+    # ── Músculos ──────────────────────────────────────────────────────
+    {
+        "key": "pectoralis", "es": "Pectoral", "en": "Pectoralis",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA34690", "muscle"), ("FMA79979", "muscle"),
+                  ("FMA45874", "muscle"), ("FMA13375", "muscle")],
+    },
+    {
+        "key": "deltoid", "es": "Deltoides", "en": "Deltoid",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA34680", "muscle"), ("FMA34682", "muscle"), ("FMA34684", "muscle")],
+    },
+    {
+        "key": "biceps", "es": "Bíceps braquial", "en": "Biceps brachii",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA37686", "muscle"), ("FMA37684", "muscle"),
+                  ("FMA37668", "muscle"), ("FMA37665", "muscle")],
+    },
+    {
+        "key": "triceps", "es": "Tríceps braquial", "en": "Triceps brachii",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA37699", "muscle"), ("FMA37697", "muscle"), ("FMA37695", "muscle")],
+    },
+    {
+        "key": "quadriceps", "es": "Cuádriceps", "en": "Quadriceps",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA38928", "muscle"), ("FMA38930", "muscle"),
+                  ("FMA38932", "muscle"), ("FMA38934", "muscle")],
+    },
+    {
+        "key": "hamstrings", "es": "Isquiotibiales", "en": "Hamstrings",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA45888", "muscle"), ("FMA45891", "muscle"),
+                  ("FMA22358", "muscle"), ("FMA22448", "muscle")],
+    },
+    {
+        "key": "calf", "es": "Pantorrilla", "en": "Calf",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA45957", "muscle"), ("FMA45960", "muscle"), ("FMA22558", "muscle")],
+    },
+    {
+        "key": "abdominals", "es": "Pared abdominal", "en": "Abdominal wall",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA13377", "muscle"), ("FMA13336", "muscle"),
+                  ("FMA13892", "muscle"), ("FMA22344", "muscle")],
+    },
+    {
+        "key": "backmuscles", "es": "Músculos de la espalda", "en": "Back muscles",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA33586", "muscle"), ("FMA33584", "muscle"), ("FMA33581", "muscle"),
+                  ("FMA13358", "muscle"), ("FMA13381", "muscle"), ("FMA13383", "muscle")],
+    },
+    {
+        "key": "gluteal", "es": "Glúteos", "en": "Gluteal",
+        "system": "Muscular", "cat": "muscle",
+        "parts": [("FMA22328", "muscle"), ("FMA22330", "muscle"), ("FMA22332", "muscle")],
     },
 ]
 
@@ -279,7 +397,7 @@ def main():
         size = hi - lo
         catalog["organs"].append({
             "key": spec["key"], "es": spec["es"], "en": spec["en"],
-            "system": spec["system"], "file": f"{URL_BASE}/{fname}",
+            "system": spec["system"], "cat": spec.get("cat", "organ"), "file": f"{URL_BASE}/{fname}",
             "bytes": nbytes, "tris": tris, "structures": entries,
             "radius": round(float(np.linalg.norm(size) / 2), 1),
             "missing": faltan,
