@@ -378,13 +378,18 @@ export default function App() {
     const dockClass = (side: 'left' | 'right', open: boolean) => {
         const mobile = [
             'absolute inset-x-2 bottom-16 z-20 flex-col gap-3',
-            'max-h-[58svh] overflow-y-auto overscroll-contain',
+            'max-h-[62svh] md:max-h-[72svh] overflow-y-auto overscroll-contain',
+            // Sin shrink-0 los paneles se comprimen (los hijos flex encogen por
+            // defecto) y, como llevan overflow-hidden, RECORTAN su contenido en
+            // vez de dejar que esta hoja haga scroll. Era por esto que en móvil
+            // no se veían todas las opciones de disección.
+            '[&>*]:shrink-0',
             open ? 'flex' : 'hidden',
         ].join(' ');
         const desktop =
             side === 'left'
-                ? 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:left-7 lg:bottom-auto lg:z-10 lg:w-[276px] lg:max-h-[calc(100%-3.5rem)]'
-                : 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:right-7 lg:bottom-7 lg:z-10 lg:w-[322px] lg:max-h-none lg:overflow-visible';
+                ? 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:left-7 lg:bottom-auto lg:z-10 lg:w-[276px] lg:max-h-[calc(100%-3.5rem)] lg:[&>*]:shrink'
+                : 'lg:flex lg:absolute lg:inset-x-auto lg:top-7 lg:right-7 lg:bottom-7 lg:z-10 lg:w-[322px] lg:max-h-none lg:overflow-visible lg:[&>*]:shrink';
         return `${mobile} ${desktop}`;
     };
 

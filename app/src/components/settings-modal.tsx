@@ -52,17 +52,20 @@ export function SettingsModal({
 
     return (
         <div
-            className="scrim fixed inset-0 z-50 grid place-items-center px-6"
+            className="scrim fixed inset-0 z-50 grid place-items-end px-3 py-3 sm:place-items-center sm:px-6 sm:py-6"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
             aria-label={t.settings}
         >
+            {/* Alto acotado + scroll interno: sin esto el modal se recorta en
+                pantallas bajas y no hay forma de llegar al contenido de abajo.
+                En móvil se ancla abajo, al alcance del pulgar. */}
             <div
-                className="sheet w-[620px] max-w-full overflow-hidden"
+                className="sheet flex max-h-[88svh] w-full flex-col overflow-hidden sm:w-[620px] sm:max-w-full"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="border-rule flex items-baseline gap-3 border-b px-5 py-3.5">
+                <div className="border-rule flex shrink-0 items-baseline gap-3 border-b px-5 py-3.5">
                     <h2 className="flex-1 font-sans text-[15px] font-semibold">{t.settings}</h2>
                     <button
                         onClick={onClose}
@@ -72,7 +75,7 @@ export function SettingsModal({
                     </button>
                 </div>
 
-                <div className="px-5 py-4">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
                     <h3 className="eyebrow">{t.dataSource}</h3>
                     <p className="text-ink-soft mt-1.5 text-[12.5px] leading-relaxed">
                         {t.dataSourceHint}

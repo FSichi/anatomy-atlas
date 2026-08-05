@@ -95,7 +95,7 @@ export function DissectionPanel({
                                     value={layers[k].opacity * 100}
                                     onChange={e => onLayer(k, { opacity: Number(e.target.value) / 100 })}
                                     aria-label={`${t.layers[k]} — opacidad`}
-                                    className="accent-clay mt-2 h-[3px] w-full cursor-pointer"
+                                    className="accent-clay mt-3 h-2 w-full cursor-pointer lg:mt-2 lg:h-[3px]"
                                 />
                             )}
                         </div>
@@ -150,7 +150,7 @@ export function DissectionPanel({
                                             })
                                         }
                                         aria-pressed={clip.axis === a}
-                                        className={`flex-1 rounded-md border px-1 py-1.5 font-sans text-[10.5px] transition-colors ${
+                                        className={`min-h-11 flex-1 rounded-md border px-1 font-sans text-[12px] transition-colors lg:min-h-0 lg:py-1.5 lg:text-[10.5px] ${
                                             clip.axis === a
                                                 ? 'border-clay bg-clay/12 text-clay-ink'
                                                 : 'border-rule text-ink-soft hover:border-clay/50'
@@ -160,6 +160,9 @@ export function DissectionPanel({
                                     </button>
                                 ))}
                             </div>
+                            {/* El deslizador del corte es el control más difícil
+                                de usar con el dedo: en táctil va más alto y con
+                                más aire alrededor. */}
                             <input
                                 type="range"
                                 min={clipMin}
@@ -167,11 +170,11 @@ export function DissectionPanel({
                                 value={clipAt}
                                 onChange={e => onClip({ at: Number(e.target.value) })}
                                 aria-label={t.section}
-                                className="accent-clay mt-2.5 h-[3px] w-full cursor-pointer"
+                                className="accent-clay mt-4 h-2 w-full cursor-pointer lg:mt-2.5 lg:h-[3px]"
                             />
                             <button
                                 onClick={() => onClip({ flipped: !clip.flipped })}
-                                className="text-ink-faint hover:text-clay-ink mt-2 font-sans text-[10.5px] underline underline-offset-2"
+                                className="text-ink-faint hover:text-clay-ink mt-3 min-h-11 font-sans text-[12px] underline underline-offset-2 lg:mt-2 lg:min-h-0 lg:text-[10.5px]"
                             >
                                 {t.flipSide}
                             </button>
