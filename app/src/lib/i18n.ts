@@ -24,6 +24,7 @@ export interface Strings {
     theme: string;
     language: string;
     reset: string;
+    resetAll: string;
     hint: string;
     loading: string;
     error: string;
@@ -119,6 +120,7 @@ const es: Strings = {
     theme: 'Cambiar tema',
     language: 'Idioma',
     reset: 'Reencuadrar',
+    resetAll: 'Restablecer vista',
     hint: 'Arrastrá para rotar · rueda para zoom · clic para identificar',
     loading: 'Descomprimiendo geometría',
     error: 'No se pudo cargar la anatomía',
@@ -222,6 +224,7 @@ const en: Strings = {
     theme: 'Toggle theme',
     language: 'Language',
     reset: 'Reframe',
+    resetAll: 'Reset view',
     hint: 'Drag to rotate · scroll to zoom · click to identify',
     loading: 'Decompressing geometry',
     error: 'Anatomy could not be loaded',

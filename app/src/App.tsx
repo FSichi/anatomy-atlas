@@ -214,6 +214,26 @@ export default function App() {
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     }, [dark]);
 
+    /**
+     * El aislamiento no sobrevive a un cambio de región ni de fuente.
+     *
+     * Las estructuras aisladas se identifican por su FMA, y ese id no existe en
+     * las demás regiones. Si el conjunto queda con contenido pero nada coincide,
+     * la escena se vacía por completo y no hay forma evidente de volver. Ese era
+     * el bug de "aíslo algo y después no puedo ver todo otra vez".
+     *
+     * Sólo se limpia el aislamiento, no la selección: el buscador salta a otra
+     * región y selecciona en el mismo paso, y borrarla anularía ese salto.
+     */
+    const lastView = useRef<string | null>(null);
+    useEffect(() => {
+        const key = `${source}/${viewKey}`;
+        if (lastView.current !== null && lastView.current !== key) {
+            setPicked(new Set());
+        }
+        lastView.current = key;
+    }, [viewKey, source]);
+
     // Reflejar el estado en la URL para que la vista sea compartible.
     useEffect(() => {
         if (!bootstrapped.current) return;
@@ -287,6 +307,16 @@ export default function App() {
     const clipMin = Math.round(view.bounds.min[axisIdx]);
     const clipMax = Math.round(view.bounds.max[axisIdx]);
     const clipAt = Math.min(clipMax, Math.max(clipMin, clip.at));
+
+    /**
+     * ¿Hay algo de lo que convenga salir? Decide si el botón se muestra encendido.
+     *
+     * A propósito NO mira la visibilidad de las capas: encender o apagar una
+     * capa es exploración normal, y además el estado inicial viene de la URL, así
+     * que compararlo contra el valor por defecto dejaba el botón siempre
+     * encendido. Sólo cuentan los modos que pueden dejarte trabado.
+     */
+    const dirty = picked.size > 0 || selected !== null || clip.enabled || measuring;
 
     const measureMm =
         measurePoints.length === 2 ? measurePoints[0].distanceTo(measurePoints[1]) : null;
@@ -362,6 +392,26 @@ export default function App() {
             else next.add(fma);
             return next;
         });
+
+    /**
+     * Vuelve todo al estado inicial: selección, aislamiento, capas, corte,
+     * medición y cámara.
+     *
+     * Existe porque es fácil quedar en un estado del que no se sale solo — el
+     * caso típico es aislar una pieza y perder de vista el control que lo
+     * deshace.
+     */
+    const resetAll = () => {
+        setSelected(null);
+        setPicked(new Set());
+        setLayers(INITIAL_LAYERS);
+        setClip(c => ({ ...c, enabled: false }));
+        setMeasuring(false);
+        setMeasurePoints([]);
+        setFocusTarget(null);
+        setSheet(null);
+        setResetNonce(n => n + 1);
+    };
 
     /** Tercer clic reinicia: medir siempre es entre dos puntos. */
     const addMeasurePoint = (p: THREE.Vector3) =>
@@ -498,6 +548,20 @@ export default function App() {
                         }`}
                     >
                         {locked ? '🔒' : '🔓'}
+                    </button>
+                    {/* Se resalta cuando hay algo que deshacer, para que el
+                        usuario vea la salida sin tener que buscarla. */}
+                    <button
+                        onClick={resetAll}
+                        title={t.resetAll}
+                        aria-label={t.resetAll}
+                        className={`grid size-8 place-items-center rounded-lg border text-[13px] transition-colors ${
+                            dirty
+                                ? 'border-clay bg-clay/12 text-clay-ink'
+                                : 'border-rule bg-surface text-ink-soft hover:border-clay hover:text-clay-ink'
+                        }`}
+                    >
+                        ⟲
                     </button>
                     <IconBtn label={t.settings} onClick={() => setSettingsOpen(true)}>
                         ⚙
@@ -701,8 +765,8 @@ export default function App() {
                     >
                         {t.structure}
                     </SheetTab>
-                    <SheetTab active={false} onClick={() => setResetNonce(n => n + 1)}>
-                        {t.reset}
+                    <SheetTab active={dirty} onClick={resetAll}>
+                        {t.resetAll}
                     </SheetTab>
                 </nav>
 
