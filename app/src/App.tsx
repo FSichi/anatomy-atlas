@@ -107,7 +107,10 @@ export default function App() {
     const [measurePoints, setMeasurePoints] = useState<THREE.Vector3[]>([]);
     const [measureLabel, setMeasureLabel] = useState<{ x: number; y: number } | null>(null);
 
-    const [source, setSource] = useState<SourceId>('bodyparts3d');
+    // La combinada es la que más muestra: 2.435 estructuras y 9 capas, contra
+    // las 931 y 6 capas de BodyParts3D sola. Si la fuente no está publicada,
+    // `availableSources` corrige la elección más abajo.
+    const [source, setSource] = useState<SourceId>('mix');
     const [sources, setSources] = useState<SourceId[]>([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
     // Apagado por defecto: la lista completa es útil pero tapa media pantalla.
@@ -170,7 +173,12 @@ export default function App() {
     const t = UI[lang];
 
     useEffect(() => {
-        availableSources().then(setSources);
+        availableSources().then(list => {
+            setSources(list);
+            // Si la fuente elegida no está publicada (por ejemplo, un clon del
+            // repo donde no se corrió ese pipeline), se cae a la primera que sí.
+            setSource(current => (list.length && !list.includes(current) ? list[0] : current));
+        });
     }, []);
 
     // La URL manda al abrir: un link compartido tiene que reproducir la vista.
